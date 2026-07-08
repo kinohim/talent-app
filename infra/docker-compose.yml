@@ -1,0 +1,23 @@
+# ローカル開発用PostgreSQL。docs/design/basic-design.md 1.2:
+# ローカル開発も本番と同じPostgreSQLに接続し、SQLiteとの差異による不具合を避ける方針。
+# 本番相当（Neon/Supabase）は別途用意し、これはあくまでローカル開発専用。
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: talent
+      POSTGRES_PASSWORD: talent
+      POSTGRES_DB: talent_app
+    ports:
+      - "5432:5432"
+    volumes:
+      - talent_app_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U talent -d talent_app"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  talent_app_pgdata:

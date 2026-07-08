@@ -1,0 +1,305 @@
+﻿1. employeeテーブル（メインテーブル）,,,,,,,
+,,,,,,,
+型,物理名,論理名,PK,FK,UK,NOT NULL,説明
+VARCHAR(6),employee_id,社員ID,〇,,,〇,
+VARCHAR(50),name,氏名,,,,○,
+VARCHAR(50),name_kana,カナ,,,,○,
+DATE,birth_date,生年月日,,,,,
+ENUM,gender,性別,,,,,"1:男性, 2:女性, 3:その他"
+INT,experience_years,経験年数,,,,,
+TEXT,career_summary,経歴概要,,,,,
+TEXT,self_pr,自己PR,,,,,
+INT,nearest_station_line_id,最寄り駅路線ID,,○,,,station_lines_linksテーブル参照
+VARCHAR(100),final_school_name,最終学歴（学校名）,,,,,自由記述
+VARCHAR(100),final_department_name,最終学歴（学部・学科名）,,,,,自由記述
+ENUM,final_school_type,最終学歴（学校種別）,,,,,"1:高校, 2:専門学校, 3:短大, 4:大学, 5:大学院"
+DATE,graduation_year_month,卒業年月,,,,,YYYYMM01で設定
+ENUM,graduation_status,卒業状況,,,,,"1:卒業, 2:中退"
+DATETIME,created_at,作成日,,,,,
+VARCHAR(100),created_by,作成者,,,,,
+VARCHAR(100),created_program,作成プログラム,,,,,
+DATETIME,updated_at,更新日,,,,,
+VARCHAR(100),updated_by,更新者,,,,,
+VARCHAR(100),updated_program,更新プログラム,,,,,
+DATETIME,deleted_at,削除日,,,,,NULL=有効データ、日付あり=削除済
+VARCHAR(100),deleted_by,削除者,,,,,
+VARCHAR(100),deleted_program,削除プログラム,,,,,
+,,,,,,,
+2. railway_lineテーブル（路線マスタ）,,,,,,,
+,,,,,,,
+型,物理名,論理名,PK,FK,UK,NOT NULL,説明
+SERIAL,line_id,路線ID,○,,,,
+VARCHAR(100),line_name,路線名,,,,○,JR山手線、東京メトロ銀座線など
+DATETIME,created_at,作成日,,,,,
+VARCHAR(100),created_by,作成者,,,,,
+VARCHAR(100),created_program,作成プログラム,,,,,
+DATETIME,updated_at,更新日,,,,,
+VARCHAR(100),updated_by,更新者,,,,,
+VARCHAR(100),updated_program,更新プログラム,,,,,
+DATETIME,deleted_at,削除日,,,,,NULL=有効データ、日付あり=削除済
+VARCHAR(100),deleted_by,削除者,,,,,
+VARCHAR(100),deleted_program,削除プログラム,,,,,
+,,,,,,,
+3. stationテーブル（駅マスタ）,,,,,,,
+,,,,,,,
+型,物理名,論理名,PK,FK,UK,NOT NULL,説明
+SERIAL,station_id,駅ID,○,,,,
+VARCHAR(100),station_name,駅名,,,,○,
+DATETIME,created_at,作成日,,,,,
+VARCHAR(100),created_by,作成者,,,,,
+VARCHAR(100),created_program,作成プログラム,,,,,
+DATETIME,updated_at,更新日,,,,,
+VARCHAR(100),updated_by,更新者,,,,,
+VARCHAR(100),updated_program,更新プログラム,,,,,
+DATETIME,deleted_at,削除日,,,,,NULL=有効データ、日付あり=削除済
+VARCHAR(100),deleted_by,削除者,,,,,
+VARCHAR(100),deleted_program,削除プログラム,,,,,
+,,,,,,,
+4. station_line_linkテーブル（駅-路線中間テーブル）,,,,,,,
+,,,,,,,
+型,物理名,論理名,PK,FK,UK,NOT NULL,説明
+SERIAL,station_lines_id,駅路線ID,○,,,,
+INT,line_id,路線ID,,○,,,railway_linesテーブル参照
+INT,station_id,駅ID,,○,,,stationsテーブル参照
+DATETIME,created_at,作成日,,,,,
+VARCHAR(100),created_by,作成者,,,,,
+VARCHAR(100),created_program,作成プログラム,,,,,
+DATETIME,updated_at,更新日,,,,,
+VARCHAR(100),updated_by,更新者,,,,,
+VARCHAR(100),updated_program,更新プログラム,,,,,
+DATETIME,deleted_at,削除日,,,,,NULL=有効データ、日付あり=削除済
+VARCHAR(100),deleted_by,削除者,,,,,
+VARCHAR(100),deleted_program,削除プログラム,,,,,
+,,,,,,,
+5. skill_categoryテーブル（スキルカテゴリマスタ）,,,,,,,
+,,,,,,,
+型,物理名,論理名,PK,FK,UK,NOT NULL,説明
+SERIAL,id,カテゴリID,○,,,○,
+SERIAL,skill_category_id,カテゴリ区分,○,,,〇,01、02、03、04、05…
+VARCHAR(100),skill_category_name,カテゴリ名,,,,○,01開発言語、02DB、03OS、04ツール、05開発工程…
+DATETIME,created_at,作成日,,,,,
+VARCHAR(100),created_by,作成者,,,,,
+VARCHAR(100),created_program,作成プログラム,,,,,
+DATETIME,updated_at,更新日,,,,,
+VARCHAR(100),updated_by,更新者,,,,,
+VARCHAR(100),updated_program,更新プログラム,,,,,
+DATETIME,deleted_at,削除日,,,,,NULL=有効データ、日付あり=削除済
+VARCHAR(100),deleted_by,削除者,,,,,
+VARCHAR(100),deleted_program,削除プログラム,,,,,
+,,,,,,,
+6. skillテーブル（スキルマスタ）,,,,,,,
+,,,,,,,
+型,物理名,論理名,PK,FK,UK,NOT NULL,説明
+SERIAL,skill_id,スキルID,○,,,,
+INT,skill_category_id,カテゴリID,,○,,○,skill_categoriesテーブル参照
+VARCHAR(100),skill_name,スキル名,,,,○,Java、Python、MySQL、Linux、基本設計、実装等
+DATETIME,created_at,作成日,,,,,
+VARCHAR(100),created_by,作成者,,,,,
+VARCHAR(100),created_program,作成プログラム,,,,,
+DATETIME,updated_at,更新日,,,,,
+VARCHAR(100),updated_by,更新者,,,,,
+VARCHAR(100),updated_program,更新プログラム,,,,,
+DATETIME,deleted_at,削除日,,,,,NULL=有効データ、日付あり=削除済
+VARCHAR(100),deleted_by,削除者,,,,,
+VARCHAR(100),deleted_program,削除プログラム,,,,,
+,,,,,,,
+,,,,,,,
+8. employee_skill_linkテーブル（社員-スキル中間テーブル）,,,,,,,
+,,,,,,,
+型,物理名,論理名,PK,FK,UK,NOT NULL,説明
+SERIAL,employee_skill_link_id,社員スキルID,〇,,,,AUTO_INCREMENT
+INT,employee_id,社員ID,○,○,○,,employeesテーブル参照
+INT,skill_id,スキルID,○,○,○,,skillsテーブル参照
+VARCHAR(100),skill_version,スキルバージョン,○,,○,,default 0
+ENUM,skill_level,習熟度,,,,,"1:◎, 2:〇, 3:△"
+DATETIME,created_at,作成日,,,,,
+VARCHAR(100),created_by,作成者,,,,,
+VARCHAR(100),created_program,作成プログラム,,,,,
+DATETIME,updated_at,更新日,,,,,
+VARCHAR(100),updated_by,更新者,,,,,
+VARCHAR(100),updated_program,更新プログラム,,,,,
+DATETIME,deleted_at,削除日,,,,,NULL=有効データ、日付あり=削除済
+VARCHAR(100),deleted_by,削除者,,,,,
+VARCHAR(100),deleted_program,削除プログラム,,,,,
+,,,,,,,
+9. certification_categoryテーブル（資格カテゴリマスタ）,,,,,,,
+,,,,,,,
+型,物理名,論理名,PK,FK,UK,NOT NULL,説明
+SERIAL,id,カテゴリID,○,,,○,AUTO_INCREMENT
+SERIAL,certification_category_id,カテゴリ区分,○,,,○,10:IT系、20:語学系、30:業務系など
+VARCHAR(100),certification_category_name,カテゴリ名,,,,○,IT系、語学系、業務系など
+DATETIME,created_at,作成日,,,,,
+VARCHAR(100),created_by,作成者,,,,,
+VARCHAR(100),created_program,作成プログラム,,,,,
+DATETIME,updated_at,更新日,,,,,
+VARCHAR(100),updated_by,更新者,,,,,
+VARCHAR(100),updated_program,更新プログラム,,,,,
+DATETIME,deleted_at,削除日,,,,,NULL=有効データ、日付あり=削除済
+VARCHAR(100),deleted_by,削除者,,,,,
+VARCHAR(100),deleted_program,削除プログラム,,,,,
+,,,,,,,
+10. certificationテーブル（資格マスタ）,,,,,,,
+,,,,,,,
+型,物理名,論理名,PK,FK,UK,NOT NULL,説明
+SERIAL,certification_id,資格ID,○,,,,AUTO_INCREMENT
+INT,certification_category_id,カテゴリID,,○,,○,certification_categoriesテーブル参照
+VARCHAR(100),certification_name,資格名,,,,○,
+VARCHAR(100),certification_organization,認定団体,,,,,
+DATETIME,created_at,作成日,,,,,
+VARCHAR(100),created_by,作成者,,,,,
+VARCHAR(100),created_program,作成プログラム,,,,,
+DATETIME,updated_at,更新日,,,,,
+VARCHAR(100),updated_by,更新者,,,,,
+VARCHAR(100),updated_program,更新プログラム,,,,,
+DATETIME,deleted_at,削除日,,,,,NULL=有効データ、日付あり=削除済
+VARCHAR(100),deleted_by,削除者,,,,,
+VARCHAR(100),deleted_program,削除プログラム,,,,,
+,,,,,,,
+11. employee_certification_linkテーブル（社員-資格中間テーブル）,,,,,,,
+,,,,,,,
+型,物理名,論理名,PK,FK,UK,NOT NULL,説明
+SERIAL,employee_certification_link_id,社員資格ID,○,,,○,AUTO_INCREMENT
+INT,employee_id,社員ID,○,○,○,○,employeesテーブル参照
+INT,certification_id,資格ID,○,○,○,○,certificationsテーブル参照
+DATE,acquired_date,取得年月日,,,,,
+DATE,expiration_date,有効期限日,,,,,資格の有効期限日
+DATETIME,created_at,作成日,,,,,
+VARCHAR(100),created_by,作成者,,,,,
+VARCHAR(100),created_program,作成プログラム,,,,,
+DATETIME,updated_at,更新日,,,,,
+VARCHAR(100),updated_by,更新者,,,,,
+VARCHAR(100),updated_program,更新プログラム,,,,,
+DATETIME,deleted_at,削除日,,,,,NULL=有効データ、日付あり=削除済
+VARCHAR(100),deleted_by,削除者,,,,,
+VARCHAR(100),deleted_program,削除プログラム,,,,,
+,,,,,,,
+12. projectテーブル（プロジェクトテーブル）,,,,,,,
+,,,,,,,
+型,物理名,論理名,PK,FK,UK,NOT NULL,説明
+SERIAL,project_id,プロジェクトID,○,,,,AUTO_INCREMENT
+INT,employee_id,社員ID,,○,,○,employeesテーブル参照
+VARCHAR(100),site_name,現場名,,,,○,MZSSとか
+VARCHAR(100),project_title,プロジェクトタイトル,,,,○,
+TEXT,project_summary,プロジェクト概要,,,,,
+DATE,start_date,開始日,,,,,
+DATE,end_date,終了日,,,,,
+VARCHAR(100),total_team_size,規模（全体人数）,,,,,幅がある可能性もあるので自由記述
+VARCHAR(100),team_size,規模（チーム人数）,,,,,幅がある可能性もあるので自由記述
+DATETIME,created_at,作成日,,,,,
+VARCHAR(100),created_by,作成者,,,,,
+VARCHAR(100),created_program,作成プログラム,,,,,
+DATETIME,updated_at,更新日,,,,,
+VARCHAR(100),updated_by,更新者,,,,,
+VARCHAR(100),updated_program,更新プログラム,,,,,
+DATETIME,deleted_at,削除日,,,,,NULL=有効データ、日付あり=削除済
+VARCHAR(100),deleted_by,削除者,,,,,
+VARCHAR(100),deleted_program,削除プログラム,,,,,
+,,,,,,,
+,,,,,,,
+13. project_roleテーブル（プロジェクト役割マスタ）,,,,,,,
+,,,,,,,
+型,物理名,論理名,PK,FK,UK,NOT NULL,説明
+SERIAL,project_role_id,役割ID,○,,,,AUTO_INCREMENT
+VARCHAR(20),project_role_name,役割名,,,,○,SE、PG、リーダー、サブリーダー
+DATETIME,created_at,作成日,,,,,
+VARCHAR(100),created_by,作成者,,,,,
+VARCHAR(100),created_program,作成プログラム,,,,,
+DATETIME,updated_at,更新日,,,,,
+VARCHAR(100),updated_by,更新者,,,,,
+VARCHAR(100),updated_program,更新プログラム,,,,,
+DATETIME,deleted_at,削除日,,,,,NULL=有効データ、日付あり=削除済
+VARCHAR(100),deleted_by,削除者,,,,,
+VARCHAR(100),deleted_program,削除プログラム,,,,,
+,,,,,,,
+14. projects_role_linkテーブル（プロジェクト-役割中間テーブル）,,,,,,,
+,,,自動連番が主キーになる？,,,,
+型,物理名,論理名,PK,FK,UK,NOT NULL,説明
+SERIAL,project_role_link_id,ID,○,,,,AUTO_INCREMENT
+INT,project_id,プロジェクトID,〇,〇,〇,,
+INT,project_irole_id,役割ID,〇,〇,〇,,
+DATETIME,created_at,作成日,,,,,
+VARCHAR(100),created_by,作成者,,,,,
+VARCHAR(100),created_program,作成プログラム,,,,,
+DATETIME,updated_at,更新日,,,,,
+VARCHAR(100),updated_by,更新者,,,,,
+VARCHAR(100),updated_program,更新プログラム,,,,,
+DATETIME,deleted_at,削除日,,,,,NULL=有効データ、日付あり=削除済
+VARCHAR(100),deleted_by,削除者,,,,,
+VARCHAR(100),deleted_program,削除プログラム,,,,,
+,,,,,,,
+15. project_detailテーブル（プロジェクト詳細テーブル）,,,,,,,
+,,,,,,,
+型,物理名,論理名,PK,FK,UK,NOT NULL,説明
+SERIAL,id,詳細ID,○,,,○,AUTO_INCREMENT
+INT,project_id,プロジェクトID,○,○,,,projectsテーブル参照
+VARCHAR(300),overview,業務詳細（概要）,,,,,
+BOOLEAN,research_analysis,業務詳細（調査分析）,,,,,True：対応あり、False：対応なし
+BOOLEAN,requirements_definition,業務詳細（要件定義）,,,,,True：対応あり、False：対応なし
+BOOLEAN,basic_design,業務詳細（基本設計）,,,,,True：対応あり、False：対応なし
+BOOLEAN,detailed_design,業務詳細（詳細設計）,,,,,True：対応あり、False：対応なし
+BOOLEAN,development,業務詳細（製造）,,,,,True：対応あり、False：対応なし
+BOOLEAN,testing,業務詳細（テスト）,,,,,True：対応あり、False：対応なし
+BOOLEAN,operation,業務詳細（運用）,,,,,True：対応あり、False：対応なし
+DATETIME,created_at,作成日,,,,,
+VARCHAR(100),created_by,作成者,,,,,
+VARCHAR(100),created_program,作成プログラム,,,,,
+DATETIME,updated_at,更新日,,,,,
+VARCHAR(100),updated_by,更新者,,,,,
+VARCHAR(100),updated_program,更新プログラム,,,,,
+DATETIME,deleted_at,削除日,,,,,NULL=有効データ、日付あり=削除済
+VARCHAR(100),deleted_by,削除者,,,,,
+VARCHAR(100),deleted_program,削除プログラム,,,,,
+,,,,,,,
+16. project_skill_linkテーブル（プロジェクト-スキル中間テーブル）,,,,,,,
+,,,自動連番が主キーになる？,,,,
+型,物理名,論理名,PK,FK,UK,NOT NULL,説明
+SERIAL,project_skill_link_id,プロジェクトスキルID,〇,,,,AUTO_INCREMENT
+INT,project_id,プロジェクトID,〇,○,○,,projectsテーブル参照
+INT,skill_id,スキルID,〇,○,○,,skillsテーブル参照
+VARCHAR(100),skill_version,スキルバージョン,〇,,○,,default 0
+DATETIME,created_at,作成日,,,,,
+VARCHAR(100),created_by,作成者,,,,,
+VARCHAR(100),created_program,作成プログラム,,,,,
+DATETIME,updated_at,更新日,,,,,
+VARCHAR(100),updated_by,更新者,,,,,
+VARCHAR(100),updated_program,更新プログラム,,,,,
+DATETIME,deleted_at,削除日,,,,,NULL=有効データ、日付あり=削除済
+VARCHAR(100),deleted_by,削除者,,,,,
+VARCHAR(100),deleted_program,削除プログラム,,,,,
+,,,,,,,
+17. loginUserテーブル（ユーザーテーブル）,,,,,,,
+,,管理者が作る場合、,,,,,
+型,物理名,論理名,PK,FK,UK,NOT NULL,説明
+INT,employee_id,社員ID,〇,,,○,社員ID（プロフィールを本人のみ更新可能にするため）
+VARCHAR(100),username,ユーザ名,,,,〇,
+VARCHAR(100),kana,カナ名,,,,〇,
+VARCHAR(255),password_hash,パスワード（ハッシュ値）,,,,〇,パスワードのハッシュ値
+ENUM,user_role,ユーザ権限,,,,〇,"ユーザーの権限レベル
+('一般ユーザ', 'マネージャー', '管理者')"
+VARCHAR(100),email,メールアドレス,,,,,メールアドレス
+TIMESTAMP,last_login_at,最終ログイン,,,,,最終ログイン日時
+VARCHAR(100),password_reset_token,パスワードリセットトークン,,,,,パスワードリセット用の一時トークン
+TIMESTAMP,password_reset_expires,パスワードリセットトークン有効期限,,,,,トークンの有効期限
+DATETIME,created_at,作成日,,,,,
+VARCHAR(100),created_by,作成者,,,,,
+VARCHAR(100),created_program,作成プログラム,,,,,
+DATETIME,updated_at,更新日,,,,,
+VARCHAR(100),updated_by,更新者,,,,,
+VARCHAR(100),updated_program,更新プログラム,,,,,
+DATETIME,deleted_at,削除日,,,,,NULL=有効データ、日付あり=削除済
+VARCHAR(100),deleted_by,削除者,,,,,
+VARCHAR(100),deleted_program,削除プログラム,,,,,
+,,,,,,,
+BK,ログインユーザー　users,,,,,,
+,型,カラム名,KEY,NOTNULL,説明,,
+,INT,id,PK,〇,AUTO_INCREMENT,,
+,INT,employee_id,PK,,社員ID（プロフィールを本人のみ更新可能にするため）,,
+,VARCHAR(50),username,,〇,,,
+,,kana,,〇,,,
+,VARCHAR(255),password_hash,,〇,パスワードのハッシュ値,,
+,ENUM,role,,〇,"ユーザーの権限レベル
+('admin', 'manager', 'user')",,
+,VARCHAR(100),email,,,メールアドレス,,
+,TIMESTAMP,last_login_at,,,最終ログイン日時,,
+,VARCHAR(100),password_reset_token,,,パスワードリセット用の一時トークン,,
+,TIMESTAMP,password_reset_expires,,,トークンの有効期限,,

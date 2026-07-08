@@ -1,0 +1,45 @@
+import { canEditDepartmentField } from "@/lib/authz";
+import { serializeEmployeeDetail } from "@/lib/employee-select";
+import { buildDepartmentTree, flattenDepartmentOptions, loadDepartments } from "@/lib/department-tree";
+import { prisma } from "@/lib/prisma";
+import { BasicInfoForm } from "@/components/resume-edit/BasicInfoForm";
+import { Forbidden } from "@/components/Forbidden";
+import { getEditContext } from "../edit-access";
+
+type RouteParams = { params: Promise<{ employeeId: string }> };
+
+/**
+ * EDT001 基本情報登録（/resumes/[employeeId]/edit/basic）。
+ * 権限チェックはgetEditContext（一次: 未ログイン/存在チェック、最終判定はPATCH API側）。
+ */
+export default async function EditBasicPage({ params }: RouteParams) {
+  const { employeeId } = await params;
+  const { session, employee, allowed } = await getEditContext(employeeId);
+
+  if (!allowed) {
+    return <Forbidden message="この社員の経歴書を編集する権限がありません" />;
+  }
+
+  const [departmentRecords, stations] = await Promise.all([
+    loadDepartments(false),
+    prisma.station.findMany({ where: { deletedAt: null }, orderBy: { stationName: "asc" } }),
+  ]);
+  const departmentOptions = flattenDepartmentOptions(buildDepartmentTree(departmentRecords));
+  const serialized = serializeEmployeeDetail(employee);
+
+  return (
+    <div className="space-y-4">
+      <h1 className="text-xl font-bold">基本情報編集</h1>
+      <p className="text-sm text-slate-500">
+        {serialized.name}（{employeeId}）
+      </p>
+      <BasicInfoForm
+        initialData={serialized}
+        canEditDepartment={canEditDepartmentField(session)}
+        departments={departmentOptions}
+        stations={stations.map((s) => ({ id: s.id, stationName: s.stationName }))}
+        redirectTo={`/resumes/${employeeId}`}
+      />
+    </div>
+  );
+}

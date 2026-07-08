@@ -1,0 +1,64 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #f5f7fb;
+  --foreground: #1a2138;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+@layer components {
+  .card {
+    @apply rounded-lg border border-slate-200 bg-white p-6 shadow-sm;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-md bg-brand-500 px-4 py-2 text-sm font-medium text-white hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50;
+  }
+
+  .form-label {
+    @apply mb-1 block text-sm font-medium text-slate-700;
+  }
+
+  .form-input {
+    @apply w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500;
+  }
+
+  .table-base {
+    @apply w-full border-collapse text-sm;
+  }
+
+  .table-base th {
+    @apply border-b border-slate-200 bg-slate-50 px-3 py-2 text-left font-semibold text-slate-600;
+  }
+
+  .table-base td {
+    @apply border-b border-slate-100 px-3 py-2;
+  }
+}
+
+/*
+ * REF005 印刷用プレビュー（ブラウザ印刷ベース、ADR 0009）。
+ * ヘッダーや「印刷する」ボタン等、印刷結果に含めたくない要素を.no-printで隠す。
+ */
+@media print {
+  header,
+  .no-print {
+    display: none !important;
+  }
+
+  main {
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+}

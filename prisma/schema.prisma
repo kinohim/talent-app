@@ -1,0 +1,471 @@
+// Prisma schema for talent-app
+// Source of truth: docs/design/data-model.md (db-design.md is the Excel-friendly physical version)
+// Common audit columns (createdAt/createdBy/updatedAt/updatedBy/deletedAt/deletedBy) are repeated
+// on every model per docs/design/db-design.md "共通カラム". Soft delete via deletedAt (ADR 0004).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  GENERAL
+  MANAGER
+  HR_SALES
+  ADMIN
+}
+
+/// 組織の階層区分（事業部＞部署＞Gr、ADR 0007）
+enum OrgLevel {
+  DIVISION
+  DEPARTMENT
+  GROUP
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum FinalSchoolType {
+  HIGH_SCHOOL
+  VOCATIONAL
+  JUNIOR_COLLEGE
+  UNIVERSITY
+  GRAD_SCHOOL
+}
+
+enum GraduationStatus {
+  GRADUATED
+  WITHDREW
+}
+
+enum SkillLevel {
+  LOW
+  MID
+  HIGH
+}
+
+/// 認証情報。経歴書データ（Employee）とは1対1で分離する。
+/// 認証はAzure AD（Microsoft Entra ID）に委譲するためパスワード関連列は持たない（ADR 0007）。
+/// emailはAzure ADとの照合キー（EDT006で事前登録）。isActive=falseはログイン不可（ADR 0009）。
+model User {
+  id          Int       @id @default(autoincrement())
+  employeeId  String    @unique
+  email       String    @unique
+  role        Role
+  isActive    Boolean   @default(true)
+  lastLoginAt DateTime?
+
+  createdAt DateTime  @default(now())
+  createdBy String
+  updatedAt DateTime  @updatedAt
+  updatedBy String
+  deletedAt DateTime?
+  deletedBy String?
+
+  employee Employee @relation(fields: [employeeId], references: [employeeId])
+
+  @@map("user")
+}
+
+/// 組織マスタ（事業部＞部署＞Grの3階層自己参照ツリー、ADR 0007）。
+/// 閲覧・編集の権限判定は「部署（DEPARTMENT）レベルの組織単位の一致」で行う（ADR 0008）。
+model Department {
+  id             Int      @id @default(autoincrement())
+  code           String   @unique
+  departmentName String
+  orgLevel       OrgLevel
+  parentId       Int?
+
+  createdAt DateTime  @default(now())
+  createdBy String
+  updatedAt DateTime  @updatedAt
+  updatedBy String
+  deletedAt DateTime?
+  deletedBy String?
+
+  parent    Department?  @relation("DepartmentTree", fields: [parentId], references: [id])
+  children  Department[] @relation("DepartmentTree")
+  employees Employee[]
+
+  @@index([parentId])
+  @@map("department")
+}
+
+/// 現場マスタ（MST005、ADR 0007で新設）。プロジェクト経歴の現場参照先。
+model Site {
+  id       Int    @id @default(autoincrement())
+  siteName String
+
+  createdAt DateTime  @default(now())
+  createdBy String
+  updatedAt DateTime  @updatedAt
+  updatedBy String
+  deletedAt DateTime?
+  deletedBy String?
+
+  projects Project[]
+
+  @@map("site")
+}
+
+/// 経歴書本体。社員IDは6桁ゼロ埋め連番（ADR 0003）。
+model Employee {
+  employeeId           String            @id
+  name                 String
+  nameKana             String
+  birthDate            DateTime?         @db.Date
+  gender               Gender?
+  departmentId         Int?
+  nearestStationId     Int?
+  experienceYears      Int?
+  careerSummary        String?
+  selfPr               String?
+  finalSchoolName      String?
+  finalDepartmentName  String?
+  finalSchoolType      FinalSchoolType?
+  graduationYearMonth  DateTime?         @db.Date
+  graduationStatus     GraduationStatus?
+
+  createdAt DateTime  @default(now())
+  createdBy String
+  updatedAt DateTime  @updatedAt
+  updatedBy String
+  deletedAt DateTime?
+  deletedBy String?
+
+  user            User?
+  department      Department?               @relation(fields: [departmentId], references: [id])
+  nearestStation  Station?                  @relation(fields: [nearestStationId], references: [id])
+  skillLinks      EmployeeSkillLink[]
+  certifications  EmployeeCertificationLink[]
+  projects        Project[]
+
+  @@index([name])
+  @@index([nameKana])
+  @@index([departmentId])
+  @@map("employee")
+}
+
+/// 路線マスタ（フェーズ2）
+model RailwayLine {
+  id       Int    @id @default(autoincrement())
+  lineName String
+
+  createdAt DateTime  @default(now())
+  createdBy String
+  updatedAt DateTime  @updatedAt
+  updatedBy String
+  deletedAt DateTime?
+  deletedBy String?
+
+  stationLinks StationLineLink[]
+
+  @@map("railway_line")
+}
+
+/// 駅マスタ（フェーズ2）
+model Station {
+  id          Int    @id @default(autoincrement())
+  stationName String
+
+  createdAt DateTime  @default(now())
+  createdBy String
+  updatedAt DateTime  @updatedAt
+  updatedBy String
+  deletedAt DateTime?
+  deletedBy String?
+
+  lineLinks StationLineLink[]
+  employees Employee[]
+
+  @@map("station")
+}
+
+/// 駅-路線 中間テーブル（フェーズ2）
+model StationLineLink {
+  id        Int @id @default(autoincrement())
+  lineId    Int
+  stationId Int
+
+  createdAt DateTime  @default(now())
+  createdBy String
+  updatedAt DateTime  @updatedAt
+  updatedBy String
+  deletedAt DateTime?
+  deletedBy String?
+
+  line    RailwayLine @relation(fields: [lineId], references: [id])
+  station Station     @relation(fields: [stationId], references: [id])
+
+  @@unique([lineId, stationId])
+  @@map("station_line_link")
+}
+
+/// スキルカテゴリマスタ
+model SkillCategory {
+  id           Int    @id @default(autoincrement())
+  code         String @unique
+  categoryName String
+
+  createdAt DateTime  @default(now())
+  createdBy String
+  updatedAt DateTime  @updatedAt
+  updatedBy String
+  deletedAt DateTime?
+  deletedBy String?
+
+  skills Skill[]
+
+  @@map("skill_category")
+}
+
+/// スキルマスタ
+model Skill {
+  id         Int     @id @default(autoincrement())
+  categoryId Int
+  skillName  String
+  hasVersion Boolean @default(false)
+
+  createdAt DateTime  @default(now())
+  createdBy String
+  updatedAt DateTime  @updatedAt
+  updatedBy String
+  deletedAt DateTime?
+  deletedBy String?
+
+  category         SkillCategory       @relation(fields: [categoryId], references: [id])
+  versions         SkillVersion[]
+  employeeLinks    EmployeeSkillLink[]
+  projectSkillLinks ProjectSkillLink[]
+
+  @@map("skill")
+}
+
+/// スキルバージョン（例: Java 8/11/17）
+model SkillVersion {
+  id           Int       @id @default(autoincrement())
+  skillId      Int
+  versionName  String
+  versionOrder Int?
+  releaseDate  DateTime? @db.Date
+  isActive     Boolean   @default(true)
+  displayName  String?
+
+  createdAt DateTime  @default(now())
+  createdBy String
+  updatedAt DateTime  @updatedAt
+  updatedBy String
+  deletedAt DateTime?
+  deletedBy String?
+
+  skill             Skill               @relation(fields: [skillId], references: [id])
+  employeeLinks     EmployeeSkillLink[]
+  projectSkillLinks ProjectSkillLink[]
+
+  @@map("skill_version")
+}
+
+/// 社員-スキル 中間テーブル
+model EmployeeSkillLink {
+  id             Int         @id @default(autoincrement())
+  employeeId     String
+  skillId        Int
+  skillVersionId Int?
+  skillLevel     SkillLevel?
+
+  createdAt DateTime  @default(now())
+  createdBy String
+  updatedAt DateTime  @updatedAt
+  updatedBy String
+  deletedAt DateTime?
+  deletedBy String?
+
+  employee     Employee      @relation(fields: [employeeId], references: [employeeId])
+  skill        Skill         @relation(fields: [skillId], references: [id])
+  skillVersion SkillVersion? @relation(fields: [skillVersionId], references: [id])
+
+  @@unique([employeeId, skillId, skillVersionId])
+  @@index([skillId])
+  @@map("employee_skill_link")
+}
+
+/// 資格カテゴリマスタ
+model CertificationCategory {
+  id           Int     @id @default(autoincrement())
+  code         String  @unique
+  categoryName String
+  description  String?
+
+  createdAt DateTime  @default(now())
+  createdBy String
+  updatedAt DateTime  @updatedAt
+  updatedBy String
+  deletedAt DateTime?
+  deletedBy String?
+
+  certifications Certification[]
+
+  @@map("certification_category")
+}
+
+/// 資格マスタ
+model Certification {
+  id                          Int     @id @default(autoincrement())
+  categoryId                  Int
+  certificationName           String
+  certificationOrganization   String?
+
+  createdAt DateTime  @default(now())
+  createdBy String
+  updatedAt DateTime  @updatedAt
+  updatedBy String
+  deletedAt DateTime?
+  deletedBy String?
+
+  category      CertificationCategory       @relation(fields: [categoryId], references: [id])
+  employeeLinks EmployeeCertificationLink[]
+
+  @@map("certification")
+}
+
+/// 社員-資格 中間テーブル。再取得履歴を複数行許容するためUNIQUE制約なし。
+model EmployeeCertificationLink {
+  id               Int       @id @default(autoincrement())
+  employeeId       String
+  certificationId  Int
+  acquiredDate     DateTime? @db.Date
+  expirationDate   DateTime? @db.Date
+
+  createdAt DateTime  @default(now())
+  createdBy String
+  updatedAt DateTime  @updatedAt
+  updatedBy String
+  deletedAt DateTime?
+  deletedBy String?
+
+  employee      Employee      @relation(fields: [employeeId], references: [employeeId])
+  certification Certification @relation(fields: [certificationId], references: [id])
+
+  @@index([certificationId])
+  @@map("employee_certification_link")
+}
+
+/// 現場ポジション（役割）マスタ（フェーズ2）
+model ProjectRole {
+  id       Int    @id @default(autoincrement())
+  roleName String
+
+  createdAt DateTime  @default(now())
+  createdBy String
+  updatedAt DateTime  @updatedAt
+  updatedBy String
+  deletedAt DateTime?
+  deletedBy String?
+
+  projectLinks ProjectRoleLink[]
+
+  @@map("project_role")
+}
+
+/// プロジェクト（現場）経歴。現場は自由記述からSiteマスタ参照に変更（ADR 0007）。
+model Project {
+  id             Int       @id @default(autoincrement())
+  employeeId     String
+  siteId         Int
+  projectTitle   String
+  projectSummary String?
+  startDate      DateTime? @db.Date
+  endDate        DateTime? @db.Date
+  totalTeamSize  String?
+  teamSize       String?
+
+  createdAt DateTime  @default(now())
+  createdBy String
+  updatedAt DateTime  @updatedAt
+  updatedBy String
+  deletedAt DateTime?
+  deletedBy String?
+
+  employee   Employee           @relation(fields: [employeeId], references: [employeeId])
+  site       Site               @relation(fields: [siteId], references: [id])
+  detail     ProjectDetail?
+  roleLinks  ProjectRoleLink[]
+  skillLinks ProjectSkillLink[]
+
+  @@index([siteId])
+  @@map("project")
+}
+
+/// プロジェクト-役割 中間テーブル
+model ProjectRoleLink {
+  id            Int @id @default(autoincrement())
+  projectId     Int
+  projectRoleId Int
+
+  createdAt DateTime  @default(now())
+  createdBy String
+  updatedAt DateTime  @updatedAt
+  updatedBy String
+  deletedAt DateTime?
+  deletedBy String?
+
+  project     Project     @relation(fields: [projectId], references: [id])
+  projectRole ProjectRole @relation(fields: [projectRoleId], references: [id])
+
+  @@unique([projectId, projectRoleId])
+  @@map("project_role_link")
+}
+
+/// プロジェクト詳細・業務工程（1対1）
+model ProjectDetail {
+  id                      Int     @id @default(autoincrement())
+  projectId               Int     @unique
+  overview                String?
+  researchAnalysis        Boolean?
+  requirementsDefinition  Boolean?
+  basicDesign             Boolean?
+  detailedDesign          Boolean?
+  development             Boolean?
+  testing                 Boolean?
+  operation               Boolean?
+
+  createdAt DateTime  @default(now())
+  createdBy String
+  updatedAt DateTime  @updatedAt
+  updatedBy String
+  deletedAt DateTime?
+  deletedBy String?
+
+  project Project @relation(fields: [projectId], references: [id])
+
+  @@map("project_detail")
+}
+
+/// プロジェクト-スキル 中間テーブル
+model ProjectSkillLink {
+  id             Int  @id @default(autoincrement())
+  projectId      Int
+  skillId        Int
+  skillVersionId Int?
+
+  createdAt DateTime  @default(now())
+  createdBy String
+  updatedAt DateTime  @updatedAt
+  updatedBy String
+  deletedAt DateTime?
+  deletedBy String?
+
+  project      Project       @relation(fields: [projectId], references: [id])
+  skill        Skill         @relation(fields: [skillId], references: [id])
+  skillVersion SkillVersion? @relation(fields: [skillVersionId], references: [id])
+
+  @@unique([projectId, skillId, skillVersionId])
+  @@map("project_skill_link")
+}

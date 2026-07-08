@@ -1,0 +1,853 @@
+<title>画面遷移図・画面イメージ（レビュー用ドラフト）</title>
+<meta name="description" content="タレントマネジメントアプリ：現行設計（S-01〜S-19）に基づく画面遷移図と19画面ぶんのワイヤーフレーム。Excel化前のレビュー用。">
+<style>
+  :root {
+    --bg: #f5f3ee;
+    --surface: #ffffff;
+    --surface-sunken: #eeece5;
+    --text: #22221f;
+    --text-muted: #6b6a63;
+    --border: #dcd8cd;
+    --border-strong: #c3beaf;
+    --wf-accent: #2c4a6e;      /* mockup UI の統一ボタン色 */
+    --wf-accent-ink: #ffffff;
+    --wf-field-bg: #fbfaf7;
+    --cat-auth: #6b5ca5;
+    --cat-auth-bg: #6b5ca51a;
+    --cat-profile: #2e7d6b;
+    --cat-profile-bg: #2e7d6b1a;
+    --cat-search: #b5762c;
+    --cat-search-bg: #b5762c1a;
+    --cat-master: #a14f4f;
+    --cat-master-bg: #a14f4f1a;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", "Segoe UI", sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #17181a;
+      --surface: #202226;
+      --surface-sunken: #2a2c31;
+      --text: #e9e7e0;
+      --text-muted: #9a9890;
+      --border: #383a3f;
+      --border-strong: #4a4c52;
+      --wf-accent: #6fa3d8;
+      --wf-accent-ink: #10151c;
+      --wf-field-bg: #26282d;
+      --cat-auth: #a597d8;
+      --cat-auth-bg: #a597d82a;
+      --cat-profile: #6bc2ac;
+      --cat-profile-bg: #6bc2ac2a;
+      --cat-search: #d9a25c;
+      --cat-search-bg: #d9a25c2a;
+      --cat-master: #d38686;
+      --cat-master-bg: #d386862a;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #17181a; --surface: #202226; --surface-sunken: #2a2c31; --text: #e9e7e0; --text-muted: #9a9890;
+    --border: #383a3f; --border-strong: #4a4c52; --wf-accent: #6fa3d8; --wf-accent-ink: #10151c; --wf-field-bg: #26282d;
+    --cat-auth: #a597d8; --cat-auth-bg: #a597d82a; --cat-profile: #6bc2ac; --cat-profile-bg: #6bc2ac2a;
+    --cat-search: #d9a25c; --cat-search-bg: #d9a25c2a; --cat-master: #d38686; --cat-master-bg: #d386862a;
+  }
+  :root[data-theme="light"] {
+    --bg: #f5f3ee; --surface: #ffffff; --surface-sunken: #eeece5; --text: #22221f; --text-muted: #6b6a63;
+    --border: #dcd8cd; --border-strong: #c3beaf; --wf-accent: #2c4a6e; --wf-accent-ink: #ffffff; --wf-field-bg: #fbfaf7;
+    --cat-auth: #6b5ca5; --cat-auth-bg: #6b5ca51a; --cat-profile: #2e7d6b; --cat-profile-bg: #2e7d6b1a;
+    --cat-search: #b5762c; --cat-search-bg: #b5762c1a; --cat-master: #a14f4f; --cat-master-bg: #a14f4f1a;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--wf-accent); }
+  h1, h2, h3, h4 { text-wrap: balance; font-family: var(--sans); }
+
+  .layout { display: flex; min-height: 100vh; align-items: flex-start; }
+
+  nav.toc {
+    position: sticky; top: 0; align-self: flex-start;
+    width: 236px; flex: 0 0 236px; height: 100vh; overflow-y: auto;
+    padding: 28px 18px; border-right: 1px solid var(--border);
+    background: var(--surface-sunken);
+  }
+  nav.toc .brand {
+    font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--text-muted); margin-bottom: 4px;
+  }
+  nav.toc .brand-title { font-size: 1.02rem; font-weight: 700; margin-bottom: 22px; }
+  nav.toc .group-label {
+    font-size: 0.68rem; letter-spacing: 0.09em; text-transform: uppercase;
+    color: var(--text-muted); margin: 20px 0 6px;
+  }
+  nav.toc a {
+    display: block; text-decoration: none; color: var(--text);
+    font-size: 0.86rem; padding: 5px 8px; border-radius: 6px; margin: 1px 0;
+  }
+  nav.toc a:hover, nav.toc a:focus-visible { background: var(--surface); }
+  nav.toc a .dot {
+    display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+    margin-right: 7px; vertical-align: middle;
+  }
+
+  main { flex: 1 1 auto; min-width: 0; padding: 40px 48px 120px; max-width: 1180px; }
+
+  .eyebrow {
+    font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--text-muted); margin: 0 0 10px;
+  }
+  header.masthead h1 { font-size: 1.9rem; margin: 0 0 8px; }
+  header.masthead p.lede { color: var(--text-muted); max-width: 62ch; margin: 0 0 28px; }
+
+  .callout {
+    border: 1px solid var(--border-strong); border-left: 4px solid var(--cat-search);
+    background: var(--cat-search-bg); border-radius: 8px;
+    padding: 16px 20px; margin: 0 0 40px;
+  }
+  .callout h3 { margin: 0 0 8px; font-size: 0.98rem; }
+  .callout p { margin: 0 0 8px; color: var(--text); }
+  .callout p:last-child { margin-bottom: 0; }
+  .callout code { font-family: var(--mono); font-size: 0.86em; background: var(--surface); padding: 1px 5px; border-radius: 4px; }
+
+  section.block { margin: 0 0 64px; scroll-margin-top: 24px; }
+  section.block h2 { font-size: 1.35rem; margin: 0 0 6px; }
+  section.block > p.desc { color: var(--text-muted); max-width: 68ch; margin: 0 0 22px; }
+
+  table.transition-table { border-collapse: collapse; width: 100%; font-size: 0.86rem; }
+  table.transition-table th, table.transition-table td {
+    border-bottom: 1px solid var(--border); padding: 8px 10px; text-align: left; vertical-align: top;
+  }
+  table.transition-table th {
+    font-size: 0.72rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-muted);
+    border-bottom: 1px solid var(--border-strong);
+  }
+  table.transition-table td.id, table.transition-table td.route { font-family: var(--mono); font-size: 0.82rem; white-space: nowrap; }
+  .scroll-x { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); padding: 4px; margin-bottom: 28px; }
+  .scroll-x table.transition-table { padding: 10px 14px; }
+
+  .diagram-wrap {
+    overflow-x: auto; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 18px; margin-bottom: 22px;
+  }
+  .diagram-wrap svg { display: block; }
+  .diagram-caption { font-size: 0.8rem; color: var(--text-muted); margin: -10px 0 30px; }
+
+  /* --- category chip --- */
+  .chip {
+    display: inline-flex; align-items: center; gap: 5px; font-size: 0.72rem;
+    padding: 3px 9px; border-radius: 999px; font-weight: 600; letter-spacing: 0.01em;
+  }
+  .chip.auth { color: var(--cat-auth); background: var(--cat-auth-bg); }
+  .chip.profile { color: var(--cat-profile); background: var(--cat-profile-bg); }
+  .chip.search { color: var(--cat-search); background: var(--cat-search-bg); }
+  .chip.master { color: var(--cat-master); background: var(--cat-master-bg); }
+  .chip.role { color: var(--text-muted); background: var(--surface-sunken); font-weight: 500; }
+
+  .group-heading { display: flex; align-items: baseline; gap: 12px; margin-bottom: 4px; }
+  .group-heading .count { font-size: 0.8rem; color: var(--text-muted); }
+
+  .screen-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 22px; margin-top: 22px; }
+  .screen-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 18px 18px 20px; scroll-margin-top: 20px;
+  }
+  .screen-card .card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 4px; }
+  .screen-card .card-head h3 { margin: 0; font-size: 1.02rem; }
+  .screen-card .sid { font-family: var(--mono); font-size: 0.76rem; color: var(--text-muted); }
+  .screen-card .route { font-family: var(--mono); font-size: 0.76rem; color: var(--text-muted); margin: 2px 0 12px; }
+  .screen-card .chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+  .screen-card .note { font-size: 0.78rem; color: var(--text-muted); margin-top: 10px; }
+  .screen-card .note strong { color: var(--text); }
+
+  .proposed { border-style: dashed; border-color: var(--cat-search); }
+  .proposed-tag { color: var(--cat-search); font-weight: 700; }
+
+  /* --- wireframe primitives (things are intentionally rough / non-functional) --- */
+  .wf-window {
+    border: 1px solid var(--border-strong); border-radius: 8px; overflow: hidden; background: var(--wf-field-bg);
+  }
+  .wf-titlebar {
+    background: var(--surface-sunken); padding: 7px 12px; font-size: 0.76rem; font-weight: 700;
+    border-bottom: 1px solid var(--border-strong); display: flex; justify-content: space-between; align-items: center;
+    letter-spacing: 0.02em;
+  }
+  .wf-body { padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+  .wf-field { display: flex; flex-direction: column; gap: 3px; }
+  .wf-field .lbl { font-size: 0.7rem; color: var(--text-muted); }
+  .wf-field .lbl .req { color: var(--cat-master); margin-left: 3px; }
+  .wf-input, .wf-select, .wf-textarea {
+    border: 1px solid var(--border-strong); border-radius: 5px; background: var(--surface);
+    padding: 6px 9px; font-size: 0.82rem; color: var(--text);
+  }
+  .wf-select { display: flex; justify-content: space-between; }
+  .wf-select::after { content: "▾"; color: var(--text-muted); font-size: 0.7em; }
+  .wf-textarea { min-height: 40px; color: var(--text-muted); }
+  .wf-row { display: flex; gap: 8px; }
+  .wf-row > * { flex: 1; }
+  .wf-actions { display: flex; gap: 8px; align-items: center; margin-top: 4px; }
+  .wf-btn {
+    font: inherit; font-size: 0.8rem; font-weight: 700; border: none; border-radius: 6px;
+    padding: 7px 16px; background: var(--wf-accent); color: var(--wf-accent-ink); cursor: default;
+  }
+  .wf-btn.ghost { background: transparent; color: var(--wf-accent); border: 1px solid var(--wf-accent); }
+  .wf-link { font-size: 0.78rem; color: var(--wf-accent); text-decoration: underline; cursor: default; background: none; border: none; padding: 0; font-family: inherit; }
+  .wf-table-wrap { overflow-x: auto; }
+  table.wf-table { width: 100%; border-collapse: collapse; font-size: 0.76rem; }
+  table.wf-table th, table.wf-table td { border: 1px solid var(--border); padding: 4px 7px; text-align: left; }
+  table.wf-table th { background: var(--surface-sunken); font-weight: 700; color: var(--text-muted); font-size: 0.7rem; }
+  .wf-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .wf-toggle { font-size: 0.72rem; color: var(--text-muted); border: 1px dashed var(--border-strong); border-radius: 5px; padding: 4px 8px; }
+  .wf-nav-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .wf-nav-grid.three { grid-template-columns: repeat(3, 1fr); }
+  .wf-panel-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin-top: 4px; }
+  .wf-repeater { border: 1px dashed var(--border-strong); border-radius: 6px; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+  .wf-repeater .rep-head { display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--text-muted); }
+  .wf-chk-grid { display: grid; grid-template-columns: repeat(3, auto); gap: 4px 12px; font-size: 0.74rem; color: var(--text-muted); }
+  .wf-chk-grid label { display: flex; align-items: center; gap: 4px; }
+  .wf-add-row { font-size: 0.75rem; color: var(--wf-accent); border: 1px dashed var(--wf-accent); border-radius: 5px; padding: 5px; text-align: center; }
+  .wf-readonly-note { font-size: 0.68rem; color: var(--cat-master); font-style: italic; }
+
+  footer.doc-footer { color: var(--text-muted); font-size: 0.8rem; border-top: 1px solid var(--border); padding-top: 18px; }
+
+  @media (max-width: 860px) {
+    .layout { flex-direction: column; }
+    nav.toc { position: static; width: 100%; flex-basis: auto; height: auto; border-right: none; border-bottom: 1px solid var(--border); }
+    main { padding: 28px 20px 100px; }
+  }
+</style>
+
+<div class="layout">
+  <nav class="toc">
+    <div class="brand">タレントマネジメントアプリ</div>
+    <div class="brand-title">画面遷移図・画面イメージ</div>
+
+    <a href="#intro">概要・検討事項</a>
+    <a href="#transition">画面遷移図</a>
+
+    <div class="group-label">認証系（S-01〜04）</div>
+    <a href="#s01"><span class="dot" style="background:var(--cat-auth)"></span>S-01 ログイン</a>
+    <a href="#s02"><span class="dot" style="background:var(--cat-auth)"></span>S-02 PWリセット申請</a>
+    <a href="#s03"><span class="dot" style="background:var(--cat-auth)"></span>S-03 PW新規登録</a>
+    <a href="#s04"><span class="dot" style="background:var(--cat-auth)"></span>S-04 PW変更</a>
+
+    <div class="group-label">プロフィール系（S-05〜10, 19）</div>
+    <a href="#s05"><span class="dot" style="background:var(--cat-profile)"></span>S-05 TOP（一般）</a>
+    <a href="#s06"><span class="dot" style="background:var(--cat-profile)"></span>S-06 TOP（管理者）</a>
+    <a href="#s07"><span class="dot" style="background:var(--cat-profile)"></span>S-07 プロフィール（本人）</a>
+    <a href="#s08"><span class="dot" style="background:var(--cat-profile)"></span>S-08 プロフィール編集</a>
+    <a href="#s09"><span class="dot" style="background:var(--cat-profile)"></span>S-09 プロフィール一覧</a>
+    <a href="#s10"><span class="dot" style="background:var(--cat-profile)"></span>S-10 プロフィール（メンバー）</a>
+    <a href="#s19"><span class="dot" style="background:var(--cat-profile)"></span>S-19 プロフィール編集（他社員）</a>
+
+    <div class="group-label">横断検索系（S-11, 17）</div>
+    <a href="#s11"><span class="dot" style="background:var(--cat-search)"></span>S-11 資格保有者一覧</a>
+    <a href="#s17"><span class="dot" style="background:var(--cat-search)"></span>S-17 スキル保有者一覧</a>
+
+    <div class="group-label">マスタ管理系（S-12〜16, 18）</div>
+    <a href="#s12"><span class="dot" style="background:var(--cat-master)"></span>S-12 アカウント管理</a>
+    <a href="#s13"><span class="dot" style="background:var(--cat-master)"></span>S-13 駅・路線管理</a>
+    <a href="#s14"><span class="dot" style="background:var(--cat-master)"></span>S-14 スキル管理</a>
+    <a href="#s15"><span class="dot" style="background:var(--cat-master)"></span>S-15 資格管理</a>
+    <a href="#s16"><span class="dot" style="background:var(--cat-master)"></span>S-16 現場ポジション管理</a>
+    <a href="#s18"><span class="dot" style="background:var(--cat-master)"></span>S-18 部署管理</a>
+    <a href="#s20"><span class="dot" style="background:var(--cat-master)"></span>S-20 Excel取込</a>
+  </nav>
+
+  <main>
+    <header class="masthead" id="intro">
+      <p class="eyebrow">Review Draft ・ Excel化前</p>
+      <h1>画面遷移図・画面イメージ</h1>
+      <p style="border:2px solid #a14f4f; border-radius:8px; padding:12px 16px; font-weight:bold;">
+        【旧仕様・2026-07-08追記】本ドラフトはS-01〜S-20の旧画面体系に基づくもので、現行の画面構成ではありません。
+        画面は「01_画面一覧.pdf」（22画面：AUTH001／REF001〜008／EDT001〜007／MST001〜005／CMN001）を正とする決定が行われました
+        （ADR 0007-screen-list-pdf-adoption.md、閲覧権限はADR 0008参照）。最新の画面一覧は docs/design/screens.md を参照してください。
+      </p>
+      <p class="lede">
+        <code>docs/design/screens.md</code>・<code>docs/design/detailed-design.md</code>で決定済みの現行仕様（S-01〜S-20）を反映した、画面遷移図とワイヤーフレーム20画面ぶんのドラフト。
+        元チーム資料（<code>20_設計/画面イメージ図.pdf</code>）はCSV出力・取込ボタンがある旧仕様のため、本ドラフトでは撤去（ADR 0005・0006）と、部署管理（S-18）・スキル保有者一覧（S-17）・他社員プロフィール編集（S-19）・Excel取込（S-20）の追加を反映している。
+        内容のOKが出たら、この構成のままExcelブック（画面遷移図.xlsx／画面イメージ.xlsx）に落とし込む。
+      </p>
+    </header>
+
+    <div class="callout">
+      <h3>✅ 解消済み：Excel取込画面の抜けを S-20 として正式追加</h3>
+      <p>
+        <code>detailed-design.md</code>「4. Excel取込仕様」でシステム管理者向けのExcel取込機能が仕様化されていたが、<code>screens.md</code>の画面一覧（旧S-01〜S-19）には対応する画面IDが定義されていなかった。
+      </p>
+      <p>
+        <strong>S-20 Excel取込</strong>（<code>/admin/import</code>、管理者専用）として正式に追加し、<code>screens.md</code>・<code>basic-design.md</code>・<code>detailed-design.md</code>・ADR <code>0005</code>に反映済み。
+      </p>
+    </div>
+
+    <section class="block" id="transition">
+      <h2>画面遷移図</h2>
+      <p class="desc">画面ID×遷移先の一覧表と、3グループ（認証・プロフィール／横断検索・マスタ管理）に分けたビジュアル図。</p>
+
+      <div class="scroll-x">
+        <table class="transition-table">
+          <thead><tr><th>画面ID</th><th>画面名</th><th>遷移元</th><th>遷移先 / アクション</th></tr></thead>
+          <tbody>
+            <tr><td class="id">S-01</td><td>ログイン</td><td>―</td><td>ログイン成功→S-05/S-06（ロール分岐）／「パスワードを忘れた方はこちら」→S-02</td></tr>
+            <tr><td class="id">S-02</td><td>PWリセット申請</td><td>S-01</td><td>送信完了→（メール経由）S-03／戻る→S-01</td></tr>
+            <tr><td class="id">S-03</td><td>PW新規登録</td><td>S-02（メールリンク）</td><td>確定→S-01</td></tr>
+            <tr><td class="id">S-04</td><td>PW変更</td><td>S-05 / S-06</td><td>確定 or 戻る→元のTOP画面</td></tr>
+            <tr><td class="id">S-05</td><td>TOP（一般）</td><td>S-01</td><td>S-07 / S-09 / S-11 / S-17 / S-04／ログアウト→S-01</td></tr>
+            <tr><td class="id">S-06</td><td>TOP（管理者）</td><td>S-01</td><td>S-05と同じ導線＋S-12 / S-13 / S-14 / S-15 / S-16 / S-18（/ S-20）</td></tr>
+            <tr><td class="id">S-07</td><td>プロフィール（本人）</td><td>S-05 / S-06</td><td>編集→S-08／TOPへ戻る</td></tr>
+            <tr><td class="id">S-08</td><td>プロフィール編集</td><td>S-07</td><td>確定 or 戻る→S-07</td></tr>
+            <tr><td class="id">S-09</td><td>プロフィール一覧</td><td>S-05 / S-06</td><td>行クリック→S-10／TOPへ戻る</td></tr>
+            <tr><td class="id">S-10</td><td>プロフィール（メンバー）閲覧</td><td>S-09</td><td>一覧に戻る→S-09／編集（権限あれば）→S-19</td></tr>
+            <tr><td class="id">S-19</td><td>プロフィール編集（他社員）</td><td>S-10（MANAGER同部署 / ADMINのみ）</td><td>確定 or 戻る→S-10</td></tr>
+            <tr><td class="id">S-11</td><td>資格保有者一覧</td><td>S-05 / S-06</td><td>TOPへ戻る</td></tr>
+            <tr><td class="id">S-17</td><td>スキル保有者一覧</td><td>S-05 / S-06</td><td>TOPへ戻る</td></tr>
+            <tr><td class="id">S-12</td><td>アカウント一覧/追加/編集</td><td>S-06</td><td>一覧⇄新規追加・編集（モーダル内で完結）／TOPへ戻る</td></tr>
+            <tr><td class="id">S-13</td><td>駅・路線一覧/追加/編集</td><td>S-06</td><td>同上</td></tr>
+            <tr><td class="id">S-14</td><td>スキル一覧/追加/編集</td><td>S-06</td><td>同上</td></tr>
+            <tr><td class="id">S-15</td><td>資格一覧/追加/編集</td><td>S-06</td><td>同上</td></tr>
+            <tr><td class="id">S-16</td><td>現場ポジション一覧/追加/編集</td><td>S-06</td><td>同上</td></tr>
+            <tr><td class="id">S-18</td><td>部署一覧/追加/編集</td><td>S-06</td><td>同上</td></tr>
+            <tr><td class="id">S-20</td><td>Excel取込</td><td>S-06</td><td>アップロード→取込結果表示／TOPへ戻る</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 style="font-size:1rem;margin-bottom:2px;">① 認証・パスワード系</h3>
+      <div class="diagram-wrap">
+        <svg viewBox="0 0 800 350" width="800" height="350" role="img" aria-label="認証・パスワード系の画面遷移図">
+          <defs>
+            <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="var(--text-muted)"></path>
+            </marker>
+          </defs>
+          <style>
+            .node rect { fill: var(--cat-auth-bg); stroke: var(--cat-auth); stroke-width: 1.4; rx: 8; }
+            .node.top rect { fill: var(--cat-profile-bg); stroke: var(--cat-profile); }
+            .node text { fill: var(--text); font-family: var(--sans); font-size: 13px; font-weight: 600; }
+            .edge { stroke: var(--text-muted); stroke-width: 1.3; fill: none; marker-end: url(#arrow); }
+            .edge.dashed { stroke-dasharray: 4 3; }
+            .edge-label { fill: var(--text-muted); font-family: var(--sans); font-size: 10.5px; }
+          </style>
+
+          <g class="node"><rect x="20" y="140" width="150" height="56"></rect><text x="95" y="163" text-anchor="middle">S-01</text><text x="95" y="180" text-anchor="middle" style="font-weight:400;font-size:11px">ログイン</text></g>
+          <g class="node top"><rect x="340" y="20" width="160" height="56"></rect><text x="420" y="43" text-anchor="middle">S-05</text><text x="420" y="60" text-anchor="middle" style="font-weight:400;font-size:11px">TOP（一般）</text></g>
+          <g class="node"><rect x="600" y="140" width="150" height="56"></rect><text x="675" y="163" text-anchor="middle">S-04</text><text x="675" y="180" text-anchor="middle" style="font-weight:400;font-size:11px">PW変更</text></g>
+          <g class="node"><rect x="20" y="260" width="150" height="56"></rect><text x="95" y="283" text-anchor="middle">S-02</text><text x="95" y="300" text-anchor="middle" style="font-weight:400;font-size:11px">PWリセット申請</text></g>
+          <g class="node"><rect x="230" y="260" width="150" height="56"></rect><text x="305" y="283" text-anchor="middle">S-03</text><text x="305" y="300" text-anchor="middle" style="font-weight:400;font-size:11px">PW新規登録</text></g>
+          <g class="node top"><rect x="460" y="260" width="160" height="56"></rect><text x="540" y="283" text-anchor="middle">S-06</text><text x="540" y="300" text-anchor="middle" style="font-weight:400;font-size:11px">TOP（管理者）</text></g>
+
+          <path class="edge" d="M150,140 C220,90 280,60 340,52"></path>
+          <text class="edge-label" x="190" y="100">ログイン成功（一般）</text>
+          <path class="edge" d="M170,186 C280,230 360,255 460,278"></path>
+          <text class="edge-label" x="255" y="245">ログイン成功（管理者）</text>
+          <path class="edge" d="M95,196 L95,260"></path>
+          <text class="edge-label" x="30" y="230">PWを忘れた方は<br/>こちら</text>
+          <path class="edge dashed" d="M170,288 L230,288"></path>
+          <text class="edge-label" x="178" y="282">メールのリンク</text>
+          <path class="edge" d="M280,260 C260,220 200,190 172,182"></path>
+          <text class="edge-label" x="185" y="230">登録完了</text>
+          <path class="edge" d="M470,45 C540,70 580,100 605,138"></path>
+          <path class="edge" d="M560,260 C580,230 590,200 620,198"></path>
+          <text class="edge-label" x="628" y="228">PW変更</text>
+          <path class="edge" d="M598,150 C540,110 500,80 478,58"></path>
+          <path class="edge" d="M628,196 C640,225 630,245 605,258"></path>
+          <text class="edge-label" x="500" y="90">完了/戻る</text>
+        </svg>
+      </div>
+      <p class="diagram-caption">S-02→S-03はメール経由（別チャネル）のため破線で表示。</p>
+
+      <h3 style="font-size:1rem;margin-bottom:2px;">② プロフィール・横断検索系</h3>
+      <div class="diagram-wrap">
+        <svg viewBox="0 0 800 420" width="800" height="420" role="img" aria-label="プロフィール・横断検索系の画面遷移図">
+          <defs>
+            <marker id="arrow2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="var(--text-muted)"></path>
+            </marker>
+          </defs>
+          <style>
+            .n2 rect { fill: var(--cat-profile-bg); stroke: var(--cat-profile); stroke-width: 1.4; rx: 8; }
+            .n2.srch rect { fill: var(--cat-search-bg); stroke: var(--cat-search); }
+            .n2.dashed rect { stroke-dasharray: 4 3; }
+            .n2 text { fill: var(--text); font-family: var(--sans); font-size: 13px; font-weight: 600; }
+            .e2 { stroke: var(--text-muted); stroke-width: 1.3; fill: none; marker-end: url(#arrow2); }
+            .e2-label { fill: var(--text-muted); font-family: var(--sans); font-size: 10.5px; }
+          </style>
+
+          <g class="n2"><rect x="320" y="10" width="160" height="52"></rect><text x="400" y="32" text-anchor="middle">S-05 / S-06</text><text x="400" y="48" text-anchor="middle" style="font-weight:400;font-size:11px">TOP画面</text></g>
+
+          <g class="n2"><rect x="10" y="120" width="150" height="52"></rect><text x="85" y="142" text-anchor="middle">S-07</text><text x="85" y="158" text-anchor="middle" style="font-weight:400;font-size:11px">プロフィール（本人）</text></g>
+          <g class="n2"><rect x="200" y="120" width="150" height="52"></rect><text x="275" y="142" text-anchor="middle">S-09</text><text x="275" y="158" text-anchor="middle" style="font-weight:400;font-size:11px">プロフィール一覧</text></g>
+          <g class="n2 srch"><rect x="420" y="120" width="150" height="52"></rect><text x="495" y="142" text-anchor="middle">S-11</text><text x="495" y="158" text-anchor="middle" style="font-weight:400;font-size:11px">資格保有者一覧</text></g>
+          <g class="n2 srch"><rect x="610" y="120" width="150" height="52"></rect><text x="685" y="142" text-anchor="middle">S-17</text><text x="685" y="158" text-anchor="middle" style="font-weight:400;font-size:11px">スキル保有者一覧</text></g>
+
+          <g class="n2"><rect x="10" y="240" width="150" height="52"></rect><text x="85" y="262" text-anchor="middle">S-08</text><text x="85" y="278" text-anchor="middle" style="font-weight:400;font-size:11px">プロフィール編集</text></g>
+          <g class="n2"><rect x="200" y="240" width="150" height="52"></rect><text x="275" y="262" text-anchor="middle">S-10</text><text x="275" y="278" text-anchor="middle" style="font-weight:400;font-size:11px">プロフィール（メンバー）</text></g>
+
+          <g class="n2 dashed"><rect x="200" y="350" width="150" height="52"></rect><text x="275" y="372" text-anchor="middle">S-19</text><text x="275" y="388" text-anchor="middle" style="font-weight:400;font-size:11px">他社員プロフィール編集</text></g>
+
+          <path class="e2" d="M340,62 C260,85 150,100 90,120"></path>
+          <path class="e2" d="M370,62 L280,120"></path>
+          <path class="e2" d="M430,62 L500,120"></path>
+          <path class="e2" d="M460,62 C560,80 650,95 690,120"></path>
+          <text class="e2-label" x="500" y="90">各画面から「TOPへ戻る」導線あり（省略）</text>
+
+          <path class="e2" d="M85,172 L85,240"></path>
+          <text class="e2-label" x="92" y="208">編集</text>
+          <path class="e2" d="M45,240 C10,210 10,190 45,172"></path>
+
+          <path class="e2" d="M275,172 L275,240"></path>
+          <text class="e2-label" x="282" y="208">氏名クリック</text>
+          <path class="e2" d="M235,240 C210,210 210,190 235,172"></path>
+
+          <path class="e2" d="M275,292 L275,350"></path>
+          <text class="e2-label" x="282" y="325">編集（MANAGER同部署／ADMIN）</text>
+          <path class="e2" d="M235,350 C205,320 205,300 235,292"></path>
+          <text class="e2-label" x="150" y="322">確定/戻る</text>
+        </svg>
+      </div>
+      <p class="diagram-caption">S-19は権限がある場合のみ表示される遷移のため破線枠で表現。各リスト系画面からTOPへの「戻る」導線は図が煩雑になるため個別の矢印を省略。</p>
+
+      <h3 style="font-size:1rem;margin-bottom:2px;">③ マスタ管理系（管理者専用）</h3>
+      <div class="diagram-wrap">
+        <svg viewBox="0 0 1080 220" width="1080" height="220" role="img" aria-label="マスタ管理系の画面遷移図">
+          <defs>
+            <marker id="arrow3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="var(--text-muted)"></path>
+            </marker>
+          </defs>
+          <style>
+            .n3 rect { fill: var(--cat-master-bg); stroke: var(--cat-master); stroke-width: 1.4; rx: 8; }
+            .n3.top rect { fill: var(--cat-profile-bg); stroke: var(--cat-profile); }
+            .n3.proposed rect { stroke-dasharray: 4 3; }
+            .n3 text { fill: var(--text); font-family: var(--sans); font-size: 12.5px; font-weight: 600; }
+            .e3 { stroke: var(--text-muted); stroke-width: 1.3; fill: none; marker-end: url(#arrow3); }
+          </style>
+          <g class="n3 top"><rect x="460" y="10" width="160" height="46"></rect><text x="540" y="30" text-anchor="middle">S-06</text><text x="540" y="45" text-anchor="middle" style="font-weight:400;font-size:10.5px">TOP（管理者）</text></g>
+
+          <g class="n3"><rect x="0" y="140" width="150" height="60"></rect><text x="75" y="162" text-anchor="middle">S-12 アカウント</text><text x="75" y="178" text-anchor="middle" style="font-weight:400;font-size:10px">一覧⇄新規追加/編集</text></g>
+          <g class="n3"><rect x="165" y="140" width="150" height="60"></rect><text x="240" y="162" text-anchor="middle">S-13 駅・路線</text><text x="240" y="178" text-anchor="middle" style="font-weight:400;font-size:10px">一覧⇄新規追加/編集</text></g>
+          <g class="n3"><rect x="330" y="140" width="150" height="60"></rect><text x="405" y="162" text-anchor="middle">S-14 スキル</text><text x="405" y="178" text-anchor="middle" style="font-weight:400;font-size:10px">一覧⇄新規追加/編集</text></g>
+          <g class="n3"><rect x="495" y="140" width="150" height="60"></rect><text x="570" y="162" text-anchor="middle">S-15 資格</text><text x="570" y="178" text-anchor="middle" style="font-weight:400;font-size:10px">一覧⇄新規追加/編集</text></g>
+          <g class="n3"><rect x="660" y="140" width="150" height="60"></rect><text x="735" y="162" text-anchor="middle">S-16 現場ポジション</text><text x="735" y="178" text-anchor="middle" style="font-weight:400;font-size:10px">一覧⇄新規追加/編集</text></g>
+          <g class="n3"><rect x="825" y="140" width="120" height="60"></rect><text x="885" y="162" text-anchor="middle">S-18 部署</text><text x="885" y="178" text-anchor="middle" style="font-weight:400;font-size:10px">一覧⇄新規追加/編集</text></g>
+          <g class="n3"><rect x="955" y="140" width="115" height="60"></rect><text x="1012" y="158" text-anchor="middle">S-20</text><text x="1012" y="174" text-anchor="middle" style="font-weight:400;font-size:10px">Excel取込</text></g>
+
+          <path class="e3" d="M475,56 L75,140"></path>
+          <path class="e3" d="M490,56 L240,140"></path>
+          <path class="e3" d="M520,56 L405,140"></path>
+          <path class="e3" d="M560,56 L570,140"></path>
+          <path class="e3" d="M600,56 L735,140"></path>
+          <path class="e3" d="M615,56 L885,140"></path>
+          <path class="e3" d="M620,56 L1012,140"></path>
+        </svg>
+      </div>
+      <p class="diagram-caption">担当5画面（S-12〜S-16, S-18）は`AdminMasterTable`共通コンポーネント。「一覧⇄新規追加/編集」は同一画面内のモーダルで完結する想定（別ルートは持たない）。S-20（Excel取込）は一覧/編集ではなくアップロード専用画面のため対象外。</p>
+    </section>
+
+    <!-- ============ 認証系 ============ -->
+    <section class="block" id="group-auth">
+      <div class="group-heading"><h2>認証系</h2><span class="count">S-01〜S-04</span></div>
+      <p class="desc">全員がアクセスするログイン・パスワード関連画面。</p>
+      <div class="screen-grid">
+
+        <div class="screen-card" id="s01">
+          <div class="card-head"><h3>ログイン</h3><span class="chip role">全員</span></div>
+          <div class="sid">S-01</div><div class="route">/login</div>
+          <div class="chips"><span class="chip auth">認証系</span></div>
+          <div class="wf-window">
+            <div class="wf-titlebar"><span>ログイン</span></div>
+            <div class="wf-body">
+              <div class="wf-field"><span class="lbl">社員ID<span class="req">*</span></span><div class="wf-input">000123</div></div>
+              <div class="wf-field"><span class="lbl">パスワード<span class="req">*</span></span><div class="wf-input">••••••••</div></div>
+              <div class="wf-actions"><button class="wf-btn">ログイン</button></div>
+              <button class="wf-link">パスワードを忘れた方はこちら</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="screen-card" id="s02">
+          <div class="card-head"><h3>パスワードリセット申請</h3><span class="chip role">全員</span></div>
+          <div class="sid">S-02</div><div class="route">/password/reset</div>
+          <div class="chips"><span class="chip auth">認証系</span></div>
+          <div class="wf-window">
+            <div class="wf-titlebar"><span>パスワード変更</span></div>
+            <div class="wf-body">
+              <div class="wf-field"><span class="lbl">社員ID<span class="req">*</span></span><div class="wf-input">000123</div></div>
+              <div class="wf-field"><span class="lbl">メールアドレス<span class="req">*</span></span><div class="wf-input">taro@example.com</div></div>
+              <div class="wf-actions"><button class="wf-btn">送る</button><button class="wf-link">戻る</button></div>
+              <div class="note">送信後：「上記メールアドレスにパスワードリセットメールを送ります」</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="screen-card" id="s03">
+          <div class="card-head"><h3>パスワード新規登録</h3><span class="chip role">全員（メールリンク経由）</span></div>
+          <div class="sid">S-03</div><div class="route">/password/reset/[token]</div>
+          <div class="chips"><span class="chip auth">認証系</span></div>
+          <div class="wf-window">
+            <div class="wf-titlebar"><span>パスワード新規登録</span></div>
+            <div class="wf-body">
+              <div class="wf-field"><span class="lbl">新しいパスワード<span class="req">*</span></span><div class="wf-input">••••••••</div></div>
+              <div class="wf-field"><span class="lbl">新しいパスワード（確認用）<span class="req">*</span></span><div class="wf-input">••••••••</div></div>
+              <div class="wf-actions"><button class="wf-btn">確定</button></div>
+              <div class="note">社員IDはURLのトークンから特定。トークンは1時間で失効、使用後は即失効。</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="screen-card" id="s04">
+          <div class="card-head"><h3>パスワード変更</h3><span class="chip role">ログイン済み</span></div>
+          <div class="sid">S-04</div><div class="route">/password/change</div>
+          <div class="chips"><span class="chip auth">認証系</span></div>
+          <div class="wf-window">
+            <div class="wf-titlebar"><span>パスワード変更</span></div>
+            <div class="wf-body">
+              <div class="wf-field"><span class="lbl">現在のパスワード<span class="req">*</span></span><div class="wf-input">••••••••</div></div>
+              <div class="wf-field"><span class="lbl">新しいパスワード<span class="req">*</span></span><div class="wf-input">••••••••</div></div>
+              <div class="wf-field"><span class="lbl">新しいパスワード（確認用）<span class="req">*</span></span><div class="wf-input">••••••••</div></div>
+              <div class="wf-actions"><button class="wf-btn">確定</button><button class="wf-link">TOPに戻る</button></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ============ プロフィール系 ============ -->
+    <section class="block" id="group-profile">
+      <div class="group-heading"><h2>プロフィール系</h2><span class="count">S-05〜S-10, S-19</span></div>
+      <p class="desc">TOP画面と、経歴書の閲覧・編集まわり。S-08とS-19は同一フォームコンポーネントを共通化し、対象と部署欄の編集可否だけを切り替える。</p>
+      <div class="screen-grid">
+
+        <div class="screen-card" id="s05">
+          <div class="card-head"><h3>TOP（一般）</h3><span class="chip role">一般</span></div>
+          <div class="sid">S-05</div><div class="route">/</div>
+          <div class="chips"><span class="chip profile">プロフィール系</span></div>
+          <div class="wf-window">
+            <div class="wf-titlebar"><span>TOP</span></div>
+            <div class="wf-body">
+              <div class="wf-panel-label">一般ユーザー</div>
+              <div class="wf-nav-grid">
+                <button class="wf-btn ghost">プロフィール（個人）</button>
+                <button class="wf-btn ghost">プロフィール一覧</button>
+                <button class="wf-btn ghost">資格保有者一覧</button>
+                <button class="wf-btn ghost">スキル保有者一覧</button>
+                <button class="wf-btn ghost">PW変更</button>
+              </div>
+              <div class="wf-actions"><button class="wf-btn">ログアウト</button></div>
+              <div class="note">CSV/Excel出力ボタンはなし（一覧のCSV/Excel出力機能は持たない、<strong>ADR 0006</strong>）。</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="screen-card" id="s06">
+          <div class="card-head"><h3>TOP（管理者）</h3><span class="chip role">管理者</span></div>
+          <div class="sid">S-06</div><div class="route">/</div>
+          <div class="chips"><span class="chip profile">プロフィール系</span></div>
+          <div class="wf-window">
+            <div class="wf-titlebar"><span>TOP</span></div>
+            <div class="wf-body">
+              <div class="wf-panel-label">一般ユーザー（S-05と同じ）</div>
+              <div class="wf-nav-grid">
+                <button class="wf-btn ghost">プロフィール一覧</button>
+                <button class="wf-btn ghost">資格 / スキル保有者一覧</button>
+              </div>
+              <div class="wf-panel-label">管理者システム</div>
+              <div class="wf-nav-grid three">
+                <button class="wf-btn ghost">アカウント管理</button>
+                <button class="wf-btn ghost">駅・路線管理</button>
+                <button class="wf-btn ghost">スキル管理</button>
+                <button class="wf-btn ghost">資格管理</button>
+                <button class="wf-btn ghost">現場ポジション管理</button>
+                <button class="wf-btn ghost">部署管理</button>
+                <button class="wf-btn ghost">Excel取込</button>
+              </div>
+              <div class="wf-actions"><button class="wf-btn">ログアウト</button></div>
+              <div class="note"><strong>部署管理（S-18）</strong>・<strong>Excel取込（S-20）</strong>を新規追加（ADR 0002・0005）。</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="screen-card" id="s07">
+          <div class="card-head"><h3>プロフィール（本人）</h3><span class="chip role">ログイン済み</span></div>
+          <div class="sid">S-07</div><div class="route">/profile</div>
+          <div class="chips"><span class="chip profile">プロフィール系</span></div>
+          <div class="wf-window">
+            <div class="wf-titlebar"><span>経歴書</span></div>
+            <div class="wf-body">
+              <div class="wf-field"><span class="lbl">氏名／カナ</span><div class="wf-input">山田 花子 ／ ヤマダ ハナコ</div></div>
+              <div class="wf-row">
+                <div class="wf-field"><span class="lbl">部署</span><div class="wf-input">開発1部</div></div>
+                <div class="wf-field"><span class="lbl">最寄り駅</span><div class="wf-input">東京メトロ銀座線 渋谷駅</div></div>
+              </div>
+              <div class="wf-field"><span class="lbl">経歴概要 / 自己PR</span><div class="wf-textarea">10年間、金融系システムの開発に従事…</div></div>
+              <div class="wf-table-wrap"><table class="wf-table"><thead><tr><th>保有スキル</th><th>Ver</th><th>習熟度</th></tr></thead><tbody><tr><td>Java</td><td>17</td><td>◎</td></tr><tr><td>PostgreSQL</td><td>―</td><td>〇</td></tr></tbody></table></div>
+              <div class="wf-table-wrap"><table class="wf-table"><thead><tr><th>保有資格</th><th>取得日</th></tr></thead><tbody><tr><td>基本情報技術者</td><td>2019-04</td></tr></tbody></table></div>
+              <div class="wf-actions"><button class="wf-btn">編集</button><button class="wf-link">TOPに戻る</button></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="screen-card" id="s08">
+          <div class="card-head"><h3>プロフィール編集</h3><span class="chip role">本人</span></div>
+          <div class="sid">S-08</div><div class="route">/profile/edit</div>
+          <div class="chips"><span class="chip profile">プロフィール系</span></div>
+          <div class="wf-window">
+            <div class="wf-titlebar"><span>経歴書編集</span></div>
+            <div class="wf-body">
+              <div class="wf-row">
+                <div class="wf-field"><span class="lbl">氏名<span class="req">*</span></span><div class="wf-input">山田 花子</div></div>
+                <div class="wf-field"><span class="lbl">カナ<span class="req">*</span></span><div class="wf-input">ヤマダ ハナコ</div></div>
+              </div>
+              <div class="wf-row">
+                <div class="wf-field"><span class="lbl">生年月日</span><div class="wf-input">1990-04-01</div></div>
+                <div class="wf-field"><span class="lbl">性別</span><div class="wf-select">女性</div></div>
+              </div>
+              <div class="wf-field"><span class="lbl">部署</span><div class="wf-input" style="color:var(--text-muted)">開発1部（読み取り専用）</div><span class="wf-readonly-note">ADMINのみ編集可</span></div>
+              <div class="wf-field"><span class="lbl">最寄り駅</span><div class="wf-select">東京メトロ銀座線 渋谷駅</div></div>
+              <div class="wf-field"><span class="lbl">経歴概要</span><div class="wf-textarea"></div></div>
+              <div class="wf-field"><span class="lbl">自己PR</span><div class="wf-textarea"></div></div>
+              <div class="wf-repeater">
+                <div class="rep-head"><span>保有スキル</span><span>×</span></div>
+                <div class="wf-row"><div class="wf-select">Java</div><div class="wf-select">17</div><div class="wf-select">◎</div></div>
+                <div class="wf-add-row">+ スキルを追加</div>
+              </div>
+              <div class="wf-repeater">
+                <div class="rep-head"><span>現場（プロジェクト）経歴</span><span>×</span></div>
+                <div class="wf-row"><div class="wf-input">現場名</div><div class="wf-input">開始日〜終了日</div></div>
+                <div class="wf-chk-grid">
+                  <label><input type="checkbox" disabled>要件定義</label><label><input type="checkbox" disabled checked>基本設計</label><label><input type="checkbox" disabled checked>詳細設計</label>
+                  <label><input type="checkbox" disabled checked>製造</label><label><input type="checkbox" disabled>テスト</label><label><input type="checkbox" disabled>運用</label>
+                </div>
+                <div class="wf-add-row">+ 現場経歴を追加</div>
+              </div>
+              <div class="wf-actions"><button class="wf-btn">確定</button><button class="wf-link">戻る</button></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="screen-card" id="s09">
+          <div class="card-head"><h3>プロフィール一覧</h3><span class="chip role">ログイン済み</span></div>
+          <div class="sid">S-09</div><div class="route">/profiles</div>
+          <div class="chips"><span class="chip profile">プロフィール系</span></div>
+          <div class="wf-window">
+            <div class="wf-titlebar"><span>プロフィール一覧</span></div>
+            <div class="wf-body">
+              <div class="wf-toolbar"><div class="wf-input" style="flex:1">氏名で検索</div><div class="wf-toggle">☐ 削除済みを表示</div></div>
+              <div class="wf-table-wrap">
+                <table class="wf-table"><thead><tr><th>社員ID ▾</th><th>氏名 ▾</th><th>部署 ▾</th><th>経験年数 ▾</th></tr></thead>
+                <tbody><tr><td>000123</td><td>山田 花子</td><td>開発1部</td><td>10</td></tr><tr><td>000456</td><td>田中 太郎</td><td>開発2部</td><td>4</td></tr></tbody></table>
+              </div>
+              <div class="note">論理削除済みデータはデフォルト非表示（ADR 0004）。</div>
+              <div class="wf-actions"><button class="wf-link">TOPに戻る</button></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="screen-card" id="s10">
+          <div class="card-head"><h3>プロフィール（メンバー）閲覧</h3><span class="chip role">ログイン済み</span></div>
+          <div class="sid">S-10</div><div class="route">/profiles/[employeeId]</div>
+          <div class="chips"><span class="chip profile">プロフィール系</span></div>
+          <div class="wf-window">
+            <div class="wf-titlebar"><span>経歴書（田中 太郎）</span></div>
+            <div class="wf-body">
+              <div class="wf-field"><span class="lbl">氏名／部署／最寄り駅</span><div class="wf-input">田中 太郎 ／ 開発2部 ／ JR山手線 新宿駅</div></div>
+              <div class="wf-table-wrap"><table class="wf-table"><thead><tr><th>保有スキル</th><th>習熟度</th></tr></thead><tbody><tr><td>Python</td><td>〇</td></tr></tbody></table></div>
+              <div class="wf-actions"><button class="wf-btn ghost">編集</button><button class="wf-link">一覧に戻る</button></div>
+              <div class="note">「編集」ボタンはMANAGER（同部署）／ADMINにのみ表示 → S-19へ。</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="screen-card proposed" id="s19">
+          <div class="card-head"><h3>プロフィール編集（他社員）</h3><span class="chip role">MANAGER（同部署）／ADMIN</span></div>
+          <div class="sid">S-19</div><div class="route">/profiles/[employeeId]/edit</div>
+          <div class="chips"><span class="chip profile">プロフィール系</span><span class="chip search">★S-08と共通化</span></div>
+          <div class="wf-window">
+            <div class="wf-titlebar"><span>経歴書編集（田中 太郎）</span></div>
+            <div class="wf-body">
+              <div class="wf-field"><span class="lbl">氏名／カナ</span><div class="wf-input">田中 太郎 ／ タナカ タロウ</div></div>
+              <div class="wf-field"><span class="lbl">部署</span><div class="wf-select">開発2部</div><span class="wf-readonly-note">ADMINのみ編集可。MANAGERには読み取り専用</span></div>
+              <div class="wf-field"><span class="lbl">最寄り駅</span><div class="wf-select">JR山手線 新宿駅</div></div>
+              <div class="wf-repeater"><div class="rep-head"><span>保有スキル・現場経歴</span></div><div class="wf-add-row">S-08と同一フォーム</div></div>
+              <div class="wf-actions"><button class="wf-btn">確定</button><button class="wf-link">戻る</button></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ============ 横断検索系 ============ -->
+    <section class="block" id="group-search">
+      <div class="group-heading"><h2>横断検索系</h2><span class="count">S-11, S-17</span></div>
+      <p class="desc">同じ検索パターン（プルダウン×氏名のAND検索）を使い回す2画面。</p>
+      <div class="screen-grid">
+
+        <div class="screen-card" id="s11">
+          <div class="card-head"><h3>資格保有者一覧</h3><span class="chip role">ログイン済み</span></div>
+          <div class="sid">S-11</div><div class="route">/certifications/holders</div>
+          <div class="chips"><span class="chip search">横断検索系</span></div>
+          <div class="wf-window">
+            <div class="wf-titlebar"><span>資格保有者一覧</span></div>
+            <div class="wf-body">
+              <div class="wf-row"><div class="wf-select">資格：基本情報技術者</div><div class="wf-input">氏名で検索</div><button class="wf-btn">検索</button></div>
+              <div class="wf-table-wrap"><table class="wf-table"><thead><tr><th>氏名</th><th>資格名</th><th>取得日</th><th>有効期限</th></tr></thead><tbody><tr><td>山田 花子</td><td>基本情報技術者</td><td>2019-04</td><td>―</td></tr></tbody></table></div>
+              <div class="wf-actions"><button class="wf-link">TOPに戻る</button></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="screen-card" id="s17">
+          <div class="card-head"><h3>スキル保有者一覧</h3><span class="chip role">ログイン済み</span></div>
+          <div class="sid">S-17</div><div class="route">/skills/holders</div>
+          <div class="chips"><span class="chip search">横断検索系</span><span class="chip profile">★新規</span></div>
+          <div class="wf-window">
+            <div class="wf-titlebar"><span>スキル保有者一覧</span></div>
+            <div class="wf-body">
+              <div class="wf-row"><div class="wf-select">スキル：Java</div><div class="wf-input">氏名で検索</div><button class="wf-btn">検索</button></div>
+              <div class="wf-table-wrap"><table class="wf-table"><thead><tr><th>氏名</th><th>スキル名</th><th>Ver</th><th>習熟度</th></tr></thead><tbody><tr><td>山田 花子</td><td>Java</td><td>17</td><td>◎</td></tr></tbody></table></div>
+              <div class="wf-actions"><button class="wf-link">TOPに戻る</button></div>
+              <div class="note">S-11と同じ設計パターン。共通コンポーネント化を推奨。</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ============ マスタ管理系 ============ -->
+    <section class="block" id="group-master">
+      <div class="group-heading"><h2>マスタ管理系</h2><span class="count">S-12〜S-16, S-18, S-20</span></div>
+      <p class="desc"><code>AdminMasterTable</code>共通コンポーネント想定。一覧・新規追加・編集を1画面（モーダル）で完結させる同一パターンの繰り返し。</p>
+      <div class="screen-grid">
+
+        <div class="screen-card" id="s12">
+          <div class="card-head"><h3>アカウント一覧/追加/編集</h3><span class="chip role">管理者</span></div>
+          <div class="sid">S-12</div><div class="route">/admin/accounts</div>
+          <div class="chips"><span class="chip master">マスタ管理系</span></div>
+          <div class="wf-window">
+            <div class="wf-titlebar"><span>アカウント一覧</span></div>
+            <div class="wf-body">
+              <div class="wf-table-wrap"><table class="wf-table"><thead><tr><th>社員ID</th><th>ユーザー名</th><th>権限</th><th></th></tr></thead>
+              <tbody><tr><td>000123</td><td>yamada</td><td>一般</td><td>編集 / 削除</td></tr></tbody></table></div>
+              <div class="wf-actions"><button class="wf-btn">新規追加</button><button class="wf-link">TOPに戻る</button></div>
+              <div class="wf-repeater"><div class="rep-head"><span>新規追加 / 編集モーダル</span></div>
+                <div class="wf-row"><div class="wf-select">社員ID</div><div class="wf-input">ユーザー名</div></div>
+                <div class="wf-row"><div class="wf-input">パスワード</div><div class="wf-select">権限（一般/管理職/管理者）</div></div>
+                <div class="wf-actions"><button class="wf-btn">確定</button><button class="wf-link">戻る</button></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="screen-card" id="s13">
+          <div class="card-head"><h3>駅・路線一覧/追加/編集</h3><span class="chip role">管理者</span></div>
+          <div class="sid">S-13</div><div class="route">/admin/stations</div>
+          <div class="chips"><span class="chip master">マスタ管理系</span></div>
+          <div class="wf-window">
+            <div class="wf-titlebar"><span>駅・路線一覧</span></div>
+            <div class="wf-body">
+              <div class="wf-toolbar"><div class="wf-input" style="flex:1">路線名・駅名で検索</div></div>
+              <div class="wf-table-wrap"><table class="wf-table"><thead><tr><th>路線名</th><th>駅名</th><th></th></tr></thead>
+              <tbody><tr><td>東京メトロ銀座線</td><td>渋谷</td><td>編集 / 削除</td></tr></tbody></table></div>
+              <div class="wf-actions"><button class="wf-btn">新規追加</button><button class="wf-link">TOPに戻る</button></div>
+              <div class="note">量が多くなるため検索を用意（元資料の指摘を継続反映）。</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="screen-card" id="s14">
+          <div class="card-head"><h3>スキル一覧/追加/編集</h3><span class="chip role">管理者</span></div>
+          <div class="sid">S-14</div><div class="route">/admin/skills</div>
+          <div class="chips"><span class="chip master">マスタ管理系</span></div>
+          <div class="wf-window">
+            <div class="wf-titlebar"><span>スキル一覧</span></div>
+            <div class="wf-body">
+              <div class="wf-toolbar"><div class="wf-input" style="flex:1">スキル名で検索</div></div>
+              <div class="wf-table-wrap"><table class="wf-table"><thead><tr><th>カテゴリ</th><th>スキル名</th><th>バージョン管理</th><th></th></tr></thead>
+              <tbody><tr><td>開発言語</td><td>Java</td><td>あり</td><td>編集 / 削除</td></tr></tbody></table></div>
+              <div class="wf-actions"><button class="wf-btn">新規追加</button><button class="wf-link">TOPに戻る</button></div>
+              <div class="wf-repeater"><div class="rep-head"><span>新規追加 / 編集モーダル</span></div>
+                <div class="wf-row"><div class="wf-select">カテゴリ</div><div class="wf-input">スキル名</div></div>
+                <label style="font-size:0.78rem;display:flex;gap:6px;align-items:center"><input type="checkbox" disabled checked>バージョン管理あり</label>
+                <div class="wf-actions"><button class="wf-btn">確定</button><button class="wf-link">戻る</button></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="screen-card" id="s15">
+          <div class="card-head"><h3>資格一覧/追加/編集</h3><span class="chip role">管理者</span></div>
+          <div class="sid">S-15</div><div class="route">/admin/certifications</div>
+          <div class="chips"><span class="chip master">マスタ管理系</span></div>
+          <div class="wf-window">
+            <div class="wf-titlebar"><span>資格一覧</span></div>
+            <div class="wf-body">
+              <div class="wf-toolbar"><div class="wf-input" style="flex:1">資格名で検索</div></div>
+              <div class="wf-table-wrap"><table class="wf-table"><thead><tr><th>カテゴリ</th><th>資格名</th><th>認定団体</th><th></th></tr></thead>
+              <tbody><tr><td>IT系</td><td>基本情報技術者</td><td>IPA</td><td>編集 / 削除</td></tr></tbody></table></div>
+              <div class="wf-actions"><button class="wf-btn">新規追加</button><button class="wf-link">TOPに戻る</button></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="screen-card" id="s16">
+          <div class="card-head"><h3>現場ポジション一覧/追加/編集</h3><span class="chip role">管理者</span></div>
+          <div class="sid">S-16</div><div class="route">/admin/project-roles</div>
+          <div class="chips"><span class="chip master">マスタ管理系</span></div>
+          <div class="wf-window">
+            <div class="wf-titlebar"><span>現場ポジション一覧</span></div>
+            <div class="wf-body">
+              <div class="wf-table-wrap"><table class="wf-table"><thead><tr><th>役割名</th><th></th></tr></thead>
+              <tbody><tr><td>リーダー</td><td>編集 / 削除</td></tr><tr><td>SE</td><td>編集 / 削除</td></tr></tbody></table></div>
+              <div class="wf-actions"><button class="wf-btn">新規追加</button><button class="wf-link">TOPに戻る</button></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="screen-card" id="s18">
+          <div class="card-head"><h3>部署一覧/追加/編集</h3><span class="chip role">管理者</span></div>
+          <div class="sid">S-18</div><div class="route">/admin/departments</div>
+          <div class="chips"><span class="chip master">マスタ管理系</span><span class="chip profile">★新規</span></div>
+          <div class="wf-window">
+            <div class="wf-titlebar"><span>部署一覧</span></div>
+            <div class="wf-body">
+              <div class="wf-table-wrap"><table class="wf-table"><thead><tr><th>部署コード</th><th>部署名</th><th></th></tr></thead>
+              <tbody><tr><td>D01</td><td>開発1部</td><td>編集 / 削除</td></tr></tbody></table></div>
+              <div class="wf-actions"><button class="wf-btn">新規追加</button><button class="wf-link">TOPに戻る</button></div>
+              <div class="note">管理職の編集範囲（自部署配下）判定の基盤（ADR 0002）。フラット構成、親子階層なし。</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="screen-card" id="s20">
+          <div class="card-head"><h3>Excel取込</h3><span class="chip role">管理者</span></div>
+          <div class="sid">S-20</div><div class="route">/admin/import</div>
+          <div class="chips"><span class="chip master">マスタ管理系</span><span class="chip profile">★新規</span></div>
+          <div class="wf-window">
+            <div class="wf-titlebar"><span>Excel取込</span></div>
+            <div class="wf-body">
+              <div class="wf-field"><span class="lbl">取込ファイル（.xlsx）</span><div class="wf-input">ファイルを選択…</div></div>
+              <div class="wf-actions"><button class="wf-btn">取込実行</button><button class="wf-link">TOPに戻る</button></div>
+              <div class="wf-table-wrap"><table class="wf-table"><thead><tr><th>行</th><th>結果</th><th>理由</th></tr></thead><tbody><tr><td>12</td><td>エラー</td><td>部署コード未登録</td></tr></tbody></table></div>
+              <div class="note">初回データ投入限定（ADR 0005）。all-or-nothing方式、行単位のエラーを一覧表示。</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <footer class="doc-footer">
+      根拠資料: <code>docs/design/screens.md</code> / <code>docs/design/detailed-design.md</code> / <code>docs/design/data-model.md</code> / ADR <code>0002</code>・<code>0004</code>〜<code>0006</code>。
+      この内容でOKであれば、画面遷移図・画面イメージをそれぞれ<code>docs/design/excel-export/</code>配下のxlsxに変換する。
+    </footer>
+  </main>
+</div>
