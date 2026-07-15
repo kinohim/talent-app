@@ -57,7 +57,6 @@ type FormTarget = {
 export function DepartmentTreeManager({ initialTree }: { initialTree: DepartmentTreeNode[] }) {
   const [tree, setTree] = useState<DepartmentTreeNode[]>(initialTree);
   const [formTarget, setFormTarget] = useState<FormTarget | null>(null);
-  const [code, setCode] = useState("");
   const [departmentName, setDepartmentName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -77,14 +76,12 @@ export function DepartmentTreeManager({ initialTree }: { initialTree: Department
 
   function openCreate(orgLevel: OrgLevel, parentId: number | null) {
     setFormTarget({ orgLevel, parentId, editingId: null });
-    setCode("");
     setDepartmentName("");
     setError(null);
   }
 
   function openEdit(node: DepartmentTreeNode) {
     setFormTarget({ orgLevel: node.orgLevel, parentId: node.parentId, editingId: node.id });
-    setCode(node.code);
     setDepartmentName(node.departmentName);
     setError(null);
   }
@@ -101,7 +98,6 @@ export function DepartmentTreeManager({ initialTree }: { initialTree: Department
     setError(null);
 
     const payload = {
-      code: code.trim(),
       departmentName: departmentName.trim(),
       orgLevel: formTarget.orgLevel,
       parentId: formTarget.parentId,
@@ -214,19 +210,6 @@ export function DepartmentTreeManager({ initialTree }: { initialTree: Department
           <h3 className="font-semibold">{formTitle}</h3>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label className="form-label" htmlFor="dept-code">
-                組織コード <span className="text-red-500">*</span>
-              </label>
-              <input
-                id="dept-code"
-                className="form-input"
-                value={code}
-                maxLength={20}
-                required
-                onChange={(e) => setCode(e.target.value)}
-              />
-            </div>
-            <div>
               <label className="form-label" htmlFor="dept-name">
                 組織名 <span className="text-red-500">*</span>
               </label>
@@ -266,7 +249,7 @@ export function DepartmentTreeManager({ initialTree }: { initialTree: Department
         description={
           deleteError ??
           (deleteTarget && countDescendants(deleteTarget) > 0
-            ? `配下に${countDescendants(deleteTarget)}件の組織があります。削除しても配下の組織は残るため、先に配下から削除することを推奨します。`
+            ? `配下に${countDescendants(deleteTarget)}件の組織があるため削除できません。先に配下の組織を削除してください。`
             : undefined)
         }
         busy={deleteBusy}

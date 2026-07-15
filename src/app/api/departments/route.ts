@@ -5,7 +5,7 @@ import { getApiSession } from "@/lib/api-auth";
 import { requireAdmin } from "@/lib/authz";
 import { apiConflict, apiForbidden, apiUnauthenticated, apiValidationError } from "@/lib/api-response";
 import { departmentSchema } from "@/lib/validation/master";
-import { buildDepartmentTree, loadDepartments } from "@/lib/department-tree";
+import { buildDepartmentTree, generateDepartmentCode, loadDepartments } from "@/lib/department-tree";
 import { ZodError } from "zod";
 
 /**
@@ -52,9 +52,10 @@ export async function POST(req: NextRequest) {
   }
 
   try {
+    const code = await generateDepartmentCode(body.orgLevel);
     const created = await prisma.department.create({
       data: {
-        code: body.code,
+        code,
         departmentName: body.departmentName,
         orgLevel: body.orgLevel,
         parentId: body.parentId ?? null,
@@ -65,7 +66,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(created, { status: 201 });
   } catch (err) {
     if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
-      return apiConflict("同じ組織コードが既に登録されています");
+      return apiConflict("組織コードの採番に失敗しました。もう一度お試しください");
     }
     throw err;
   }

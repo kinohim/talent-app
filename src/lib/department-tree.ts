@@ -31,6 +31,32 @@ export async function loadDepartments(includeDeleted = false): Promise<Departmen
   });
 }
 
+const DEPARTMENT_CODE_PREFIX: Record<OrgLevel, string> = {
+  DIVISION: "DIV",
+  DEPARTMENT: "DEP",
+  GROUP: "GRP",
+};
+
+/**
+ * 組織コードの自動採番（MST004: ユーザーには入力させず、階層区分ごとの連番で発行する）。
+ * codeはDB全体でユニークなため、論理削除済みの行も含めて既存の最大連番を求める。
+ */
+export async function generateDepartmentCode(orgLevel: OrgLevel): Promise<string> {
+  const prefix = DEPARTMENT_CODE_PREFIX[orgLevel];
+  const existing = await prisma.department.findMany({
+    where: { code: { startsWith: prefix } },
+    select: { code: true },
+  });
+
+  const pattern = new RegExp(`^${prefix}(\\d+)$`);
+  const maxSeq = existing.reduce((max, { code }) => {
+    const match = code.match(pattern);
+    return match ? Math.max(max, Number(match[1])) : max;
+  }, 0);
+
+  return `${prefix}${String(maxSeq + 1).padStart(2, "0")}`;
+}
+
 export type DepartmentTreeNode = DepartmentRecord & { children: DepartmentTreeNode[] };
 
 /**

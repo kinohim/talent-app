@@ -5,10 +5,9 @@ import { z } from "zod";
  * docs/design/detailed-design.md 3章「S-14/S-15/S-18共通仕様」に基づく。
  */
 
-/** 組織マスタ（MST004）。事業部＞部署＞Grの3階層（ADR 0007）。 */
+/** 組織マスタ（MST004）。事業部＞部署＞Grの3階層（ADR 0007）。組織コードはユーザー入力させず自動採番する。 */
 export const departmentSchema = z
   .object({
-    code: z.string().trim().min(1, "組織コードは必須です").max(20),
     departmentName: z.string().trim().min(1, "組織名は必須です").max(100),
     orgLevel: z.enum(["DIVISION", "DEPARTMENT", "GROUP"]),
     parentId: z.number().int().positive().nullable().optional(),

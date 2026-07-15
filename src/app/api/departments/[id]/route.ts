@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getApiSession } from "@/lib/api-auth";
 import { requireAdmin } from "@/lib/authz";
@@ -42,34 +41,44 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
     }
   }
 
-  try {
-    const updated = await prisma.department.update({
-      where: { id: Number(id) },
-      data: { ...body, updatedBy: session.user.employeeId },
-    });
-    return NextResponse.json(updated);
-  } catch (err) {
-    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
-      return apiConflict("同じ組織コードが既に登録されています");
-    }
-    throw err;
-  }
+  // 組織コードはユーザー入力させず自動採番のため更新対象に含めない（bodyにcodeは存在しない）
+  const updated = await prisma.department.update({
+    where: { id: Number(id) },
+    data: { ...body, updatedBy: session.user.employeeId },
+  });
+  return NextResponse.json(updated);
 }
 
-/** DELETE /api/departments/[id] — 論理削除（ADMINのみ）。関連社員は参照側で表示時に配慮する方針。 */
+/**
+ * DELETE /api/departments/[id] — 論理削除（ADMINのみ）。
+ * 配下に組織がある場合、または所属社員（現職・退職を問わず削除されていない社員）が
+ * いる場合は削除不可（screens.md MST004、schema.mdの一般ルール）。
+ */
 export async function DELETE(_req: NextRequest, { params }: RouteParams) {
   const session = await getApiSession();
   if (!session) return apiUnauthenticated();
   if (!requireAdmin(session)) return apiForbidden();
 
   const { id } = await params;
-  const existing = await prisma.department.findUnique({ where: { id: Number(id) } });
+  const departmentId = Number(id);
+  const existing = await prisma.department.findUnique({ where: { id: departmentId } });
   if (!existing || existing.deletedAt) return apiNotFound();
 
+  const [childCount, employeeCount] = await Promise.all([
+    prisma.department.count({ where: { parentId: departmentId, deletedAt: null } }),
+    prisma.employee.count({ where: { departmentId, deletedAt: null } }),
+  ]);
+  if (childCount > 0) {
+    return apiConflict("配下に組織があるため削除できません");
+  }
+  if (employeeCount > 0) {
+    return apiConflict("社員が所属しているため削除できません");
+  }
+
   await prisma.department.update({
-    where: { id: Number(id) },
+    where: { id: departmentId },
     data: { deletedAt: new Date(), deletedBy: session.user.employeeId },
   });
 
-  return NextResponse.json({ id: Number(id) });
+  return NextResponse.json({ id: departmentId });
 }
