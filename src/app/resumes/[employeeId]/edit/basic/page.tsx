@@ -1,7 +1,6 @@
 import { canEditDepartmentField } from "@/lib/authz";
 import { serializeEmployeeDetail } from "@/lib/employee-select";
 import { buildDepartmentTree, flattenDepartmentOptions, loadDepartments } from "@/lib/department-tree";
-import { prisma } from "@/lib/prisma";
 import { BasicInfoForm } from "@/components/resume-edit/BasicInfoForm";
 import { Forbidden } from "@/components/Forbidden";
 import { getEditContext } from "../edit-access";
@@ -21,10 +20,7 @@ export default async function EditBasicPage({ params }: RouteParams) {
     return <Forbidden message="この社員の経歴書を編集する権限がありません" />;
   }
 
-  const [departmentRecords, stations] = await Promise.all([
-    loadDepartments(false),
-    prisma.station.findMany({ where: { deletedAt: null }, orderBy: { stationName: "asc" } }),
-  ]);
+  const departmentRecords = await loadDepartments(false);
   const departmentOptions = flattenDepartmentOptions(buildDepartmentTree(departmentRecords));
   const serialized = serializeEmployeeDetail(employee);
 
@@ -38,7 +34,6 @@ export default async function EditBasicPage({ params }: RouteParams) {
         initialData={serialized}
         canEditDepartment={canEditDepartmentField(session)}
         departments={departmentOptions}
-        stations={stations.map((s) => ({ id: s.id, stationName: s.stationName }))}
         redirectTo={`/resumes/${employeeId}`}
       />
     </div>

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ErrorList, FormActions, patchEmployeeSection } from "./patch-section";
+import { StationSearchInput } from "./StationSearchInput";
 
 /**
  * EDT001 基本情報登録（/resumes/[employeeId]/edit/basic）。
@@ -23,6 +24,7 @@ type InitialData = {
   departmentId: number | null;
   departmentName: string | null;
   nearestStationId: number | null;
+  nearestStationName: string | null;
   experienceYears: number | null;
   finalSchoolName: string | null;
   finalDepartmentName: string | null;
@@ -37,7 +39,6 @@ type Props = {
   initialData: InitialData;
   canEditDepartment: boolean;
   departments: { id: number; label: string }[];
-  stations: { id: number; stationName: string }[];
   redirectTo: string;
 };
 
@@ -70,7 +71,6 @@ export function BasicInfoForm({
   initialData,
   canEditDepartment,
   departments,
-  stations,
   redirectTo,
 }: Props) {
   const router = useRouter();
@@ -206,18 +206,10 @@ export function BasicInfoForm({
           </div>
           <div>
             <label className="form-label">最寄り駅</label>
-            <select
-              className="form-input"
-              value={nearestStationId}
-              onChange={(e) => setNearestStationId(e.target.value)}
-            >
-              <option value="">未設定</option>
-              {stations.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.stationName}
-                </option>
-              ))}
-            </select>
+            <StationSearchInput
+              initialName={initialData.nearestStationName}
+              onSelect={(id) => setNearestStationId(id ? String(id) : "")}
+            />
           </div>
           <div>
             <label className="form-label">経験年数</label>
