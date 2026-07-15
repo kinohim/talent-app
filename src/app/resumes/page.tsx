@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
 import { flattenDepartmentOptions } from "@/lib/department-tree";
+import { MultiSelectDropdown } from "@/components/MultiSelectDropdown";
 import {
   loadSearchMasters,
   searchEmployees,
@@ -154,19 +155,12 @@ export default async function ResumesPage({ searchParams }: { searchParams: Sear
           </div>
           <div>
             <label className="form-label">スキル（複数選択可）</label>
-            <select
-              className="form-input"
+            <MultiSelectDropdown
               name="skillIds"
-              multiple
-              size={5}
-              defaultValue={params.skillIds.map(String)}
-            >
-              {masters.skills.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.skillName}
-                </option>
-              ))}
-            </select>
+              options={masters.skills.map((s) => ({ id: s.id, label: s.skillName }))}
+              defaultValues={params.skillIds}
+              placeholder="スキルを選択"
+            />
             <div className="mt-1 flex gap-4 text-sm">
               <label className="flex items-center gap-1">
                 <input type="radio" name="skillMatch" value="or" defaultChecked={params.skillMatch === "or"} />
@@ -180,19 +174,12 @@ export default async function ResumesPage({ searchParams }: { searchParams: Sear
           </div>
           <div>
             <label className="form-label">資格（複数選択可）</label>
-            <select
-              className="form-input"
+            <MultiSelectDropdown
               name="certificationIds"
-              multiple
-              size={5}
-              defaultValue={params.certificationIds.map(String)}
-            >
-              {masters.certifications.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.certificationName}
-                </option>
-              ))}
-            </select>
+              options={masters.certifications.map((c) => ({ id: c.id, label: c.certificationName }))}
+              defaultValues={params.certificationIds}
+              placeholder="資格を選択"
+            />
             <div className="mt-1 flex gap-4 text-sm">
               <label className="flex items-center gap-1">
                 <input
@@ -216,19 +203,12 @@ export default async function ResumesPage({ searchParams }: { searchParams: Sear
           </div>
           <div>
             <label className="form-label">現場（複数選択可）</label>
-            <select
-              className="form-input"
+            <MultiSelectDropdown
               name="siteIds"
-              multiple
-              size={5}
-              defaultValue={params.siteIds.map(String)}
-            >
-              {masters.sites.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.siteName}
-                </option>
-              ))}
-            </select>
+              options={masters.sites.map((s) => ({ id: s.id, label: s.siteName }))}
+              defaultValues={params.siteIds}
+              placeholder="現場を選択"
+            />
             <p className="mt-1 text-xs text-slate-400">過去にその現場にいた社員を検索できます</p>
           </div>
         </div>
