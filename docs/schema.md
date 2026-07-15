@@ -38,7 +38,7 @@ deleted_at, deleted_by, deleted_program   -- 論理削除。NULL=有効、日付
 | name_kana | VARCHAR(50) | NULL可 | 初期登録前はNULL |
 | birth_date | DATE | | |
 | gender | ENUM | | 1:男性, 2:女性, 3:その他 |
-| experience_years | INT | | プロジェクト経歴の登録・更新・削除時に自動計算して保存。**全プロジェクト期間の和集合**（重複期間は1回として数える）を月数で算出し、12で割った整数部（切り捨て）を年数とする。`end_date=NULL`（進行中）は計算時点の年月まで含めて計算する |
+| hire_date | DATE | | 入社年月日。本人（または管理職）が基本情報編集（EDT001）で直接入力する |
 | career_summary | TEXT | | |
 | self_pr | TEXT | | |
 | nearest_station_line | VARCHAR(100) | | 自由記述。例：JR山手線 |

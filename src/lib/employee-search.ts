@@ -20,8 +20,8 @@ import {
 export type EmployeeSearchParams = {
   name?: string;
   departmentId?: number;
-  experienceYearsMin?: number;
-  experienceYearsMax?: number;
+  hireDateFrom?: string;
+  hireDateTo?: string;
   skillIds: number[];
   skillMatch: "and" | "or";
   certificationIds: number[];
@@ -37,7 +37,7 @@ export type EmployeeSearchRow = {
   name: string;
   nameKana: string;
   department: { id: number; name: string } | null;
-  experienceYears: number | null;
+  hireDate: Date | null;
   matchedSkills: string[];
   matchedCertifications: string[];
   matchedSites: string[];
@@ -80,11 +80,11 @@ export async function searchEmployees(
     conditions.push({ departmentId: { in: ids } });
   }
 
-  if (params.experienceYearsMin !== undefined) {
-    conditions.push({ experienceYears: { gte: params.experienceYearsMin } });
+  if (params.hireDateFrom !== undefined) {
+    conditions.push({ hireDate: { gte: new Date(params.hireDateFrom) } });
   }
-  if (params.experienceYearsMax !== undefined) {
-    conditions.push({ experienceYears: { lte: params.experienceYearsMax } });
+  if (params.hireDateTo !== undefined) {
+    conditions.push({ hireDate: { lte: new Date(params.hireDateTo) } });
   }
 
   if (params.skillIds.length > 0) {
@@ -166,7 +166,7 @@ export async function searchEmployees(
       department: employee.department
         ? { id: employee.department.id, name: employee.department.departmentName }
         : null,
-      experienceYears: employee.experienceYears,
+      hireDate: employee.hireDate,
       matchedSkills: [...new Set(employee.skillLinks.map((l) => l.skill.skillName))],
       matchedCertifications: [
         ...new Set(employee.certifications.map((l) => l.certification.certificationName)),

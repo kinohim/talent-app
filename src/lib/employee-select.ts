@@ -42,7 +42,7 @@ export function serializeEmployeeDetail(employee: EmployeeDetail) {
     departmentName: employee.department?.departmentName ?? null,
     nearestStationId: employee.nearestStationId,
     nearestStationName: employee.nearestStation?.stationName ?? null,
-    experienceYears: employee.experienceYears,
+    hireDate: employee.hireDate,
     careerSummary: employee.careerSummary,
     selfPr: employee.selfPr,
     finalSchoolName: employee.finalSchoolName,

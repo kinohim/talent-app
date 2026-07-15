@@ -13,7 +13,7 @@ import {
 /**
  * REF002 経歴書一覧（/resumes）。
  * 全社員の経歴書を検索・一覧表示。検索条件は detailed-design.md 3章のREF002仕様に準拠:
- * 氏名・カナ／所属組織（配下含む）／経験年数／スキル（AND/OR）／資格（AND/OR）／現場。
+ * 氏名・カナ／所属組織（配下含む）／入社年月日／スキル（AND/OR）／資格（AND/OR）／現場。
  * 検索ロジックはGET /api/employeesと共通（src/lib/employee-search.ts）。
  * GENERALの場合、他部署の社員は一覧行のみ表示し詳細リンクは非活性（ADR 0008）。
  */
@@ -44,6 +44,11 @@ function toOptionalInt(value: string | undefined): number | undefined {
   return Number.isFinite(parsed) ? parsed : undefined;
 }
 
+function toOptionalDate(value: string | undefined): string | undefined {
+  if (value === undefined || value.trim() === "") return undefined;
+  return Number.isNaN(Date.parse(value)) ? undefined : value;
+}
+
 export default async function ResumesPage({ searchParams }: { searchParams: SearchParams }) {
   const session = await getServerSession(authOptions);
   if (!session) redirect("/login");
@@ -52,8 +57,8 @@ export default async function ResumesPage({ searchParams }: { searchParams: Sear
   const params: EmployeeSearchParams = {
     name: first(sp.name)?.trim() || undefined,
     departmentId: toOptionalInt(first(sp.departmentId)),
-    experienceYearsMin: toOptionalInt(first(sp.experienceYearsMin)),
-    experienceYearsMax: toOptionalInt(first(sp.experienceYearsMax)),
+    hireDateFrom: toOptionalDate(first(sp.hireDateFrom)),
+    hireDateTo: toOptionalDate(first(sp.hireDateTo)),
     skillIds: toIdList(sp.skillIds),
     skillMatch: first(sp.skillMatch) === "and" ? "and" : "or",
     certificationIds: toIdList(sp.certificationIds),
@@ -76,10 +81,8 @@ export default async function ResumesPage({ searchParams }: { searchParams: Sear
     const query = new URLSearchParams();
     if (params.name) query.set("name", params.name);
     if (params.departmentId !== undefined) query.set("departmentId", String(params.departmentId));
-    if (params.experienceYearsMin !== undefined)
-      query.set("experienceYearsMin", String(params.experienceYearsMin));
-    if (params.experienceYearsMax !== undefined)
-      query.set("experienceYearsMax", String(params.experienceYearsMax));
+    if (params.hireDateFrom !== undefined) query.set("hireDateFrom", params.hireDateFrom);
+    if (params.hireDateTo !== undefined) query.set("hireDateTo", params.hireDateTo);
     for (const id of params.skillIds) query.append("skillIds", String(id));
     if (params.skillIds.length > 0) query.set("skillMatch", params.skillMatch);
     for (const id of params.certificationIds) query.append("certificationIds", String(id));
@@ -126,30 +129,22 @@ export default async function ResumesPage({ searchParams }: { searchParams: Sear
           </div>
           <div className="flex items-end gap-2">
             <div className="flex-1">
-              <label className="form-label">経験年数（下限）</label>
+              <label className="form-label">入社年月日（下限）</label>
               <input
-                type="number"
-                min={0}
-                max={100}
+                type="date"
                 className="form-input"
-                name="experienceYearsMin"
-                defaultValue={
-                  params.experienceYearsMin !== undefined ? String(params.experienceYearsMin) : ""
-                }
+                name="hireDateFrom"
+                defaultValue={params.hireDateFrom ?? ""}
               />
             </div>
             <span className="pb-2 text-sm text-slate-400">〜</span>
             <div className="flex-1">
-              <label className="form-label">経験年数（上限）</label>
+              <label className="form-label">入社年月日（上限）</label>
               <input
-                type="number"
-                min={0}
-                max={100}
+                type="date"
                 className="form-input"
-                name="experienceYearsMax"
-                defaultValue={
-                  params.experienceYearsMax !== undefined ? String(params.experienceYearsMax) : ""
-                }
+                name="hireDateTo"
+                defaultValue={params.hireDateTo ?? ""}
               />
             </div>
           </div>
@@ -240,7 +235,7 @@ export default async function ResumesPage({ searchParams }: { searchParams: Sear
             <th>氏名</th>
             <th>カナ</th>
             <th>所属組織</th>
-            <th>経験年数</th>
+            <th>入社年月日</th>
             {hasMatchColumns && <th>ヒットしたスキル / 資格 / 現場</th>}
             <th></th>
           </tr>
@@ -255,7 +250,7 @@ export default async function ResumesPage({ searchParams }: { searchParams: Sear
               </td>
               <td>{row.nameKana}</td>
               <td>{row.department?.name ?? "-"}</td>
-              <td>{row.experienceYears !== null ? `${row.experienceYears}年` : "-"}</td>
+              <td>{row.hireDate ? row.hireDate.toISOString().slice(0, 10) : "-"}</td>
               {hasMatchColumns && (
                 <td className="text-xs text-slate-600">
                   {[...row.matchedSkills, ...row.matchedCertifications, ...row.matchedSites].join(

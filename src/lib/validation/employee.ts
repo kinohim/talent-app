@@ -36,7 +36,14 @@ export const basicSectionSchema = z.object({
   // departmentIdはADMINのみ変更可。他ロールが送ってもAPI側で無視する（api-design.md 2.2）。
   departmentId: z.number().int().positive().nullable().optional(),
   nearestStationId: z.number().int().positive().nullable().optional(),
-  experienceYears: z.number().int().min(0).max(100).nullable().optional(),
+  hireDate: z
+    .string()
+    .date()
+    .nullable()
+    .optional()
+    .refine((v) => !v || v <= new Date().toISOString().slice(0, 10), {
+      message: "入社年月日に未来日は指定できません",
+    }),
   finalSchoolName: z.string().max(100).nullable().optional(),
   finalDepartmentName: z.string().max(100).nullable().optional(),
   finalSchoolType: z

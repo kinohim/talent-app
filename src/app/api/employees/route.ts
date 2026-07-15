@@ -26,6 +26,11 @@ function parseOptionalInt(value: string | null): number | undefined {
   return Number.isFinite(parsed) ? parsed : undefined;
 }
 
+function parseOptionalDate(value: string | null): string | undefined {
+  if (value === null || value.trim() === "") return undefined;
+  return Number.isNaN(Date.parse(value)) ? undefined : value;
+}
+
 export async function GET(req: NextRequest) {
   const session = await getApiSession();
   if (!session) return apiUnauthenticated();
@@ -36,8 +41,8 @@ export async function GET(req: NextRequest) {
   const params: EmployeeSearchParams = {
     name: searchParams.get("name")?.trim() || undefined,
     departmentId: parseOptionalInt(searchParams.get("departmentId")),
-    experienceYearsMin: parseOptionalInt(searchParams.get("experienceYearsMin")),
-    experienceYearsMax: parseOptionalInt(searchParams.get("experienceYearsMax")),
+    hireDateFrom: parseOptionalDate(searchParams.get("hireDateFrom")),
+    hireDateTo: parseOptionalDate(searchParams.get("hireDateTo")),
     skillIds: parseIdList(searchParams.get("skillIds")),
     skillMatch: searchParams.get("skillMatch") === "and" ? "and" : "or",
     certificationIds: parseIdList(searchParams.get("certificationIds")),

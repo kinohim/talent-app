@@ -124,7 +124,7 @@ model Employee {
   gender               Gender?
   departmentId         Int?
   nearestStationId     Int?
-  experienceYears      Int?
+  hireDate             DateTime?         @db.Date
   careerSummary        String?
   selfPr               String?
   finalSchoolName      String?

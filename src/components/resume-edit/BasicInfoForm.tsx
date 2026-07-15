@@ -25,7 +25,7 @@ type InitialData = {
   departmentName: string | null;
   nearestStationId: number | null;
   nearestStationName: string | null;
-  experienceYears: number | null;
+  hireDate: DateLike;
   finalSchoolName: string | null;
   finalDepartmentName: string | null;
   finalSchoolType: string | null;
@@ -84,9 +84,7 @@ export function BasicInfoForm({
   const [nearestStationId, setNearestStationId] = useState(
     initialData.nearestStationId ? String(initialData.nearestStationId) : ""
   );
-  const [experienceYears, setExperienceYears] = useState(
-    initialData.experienceYears !== null ? String(initialData.experienceYears) : ""
-  );
+  const [hireDate, setHireDate] = useState(toDateInputValue(initialData.hireDate));
   const [finalSchoolName, setFinalSchoolName] = useState(initialData.finalSchoolName ?? "");
   const [finalDepartmentName, setFinalDepartmentName] = useState(
     initialData.finalDepartmentName ?? ""
@@ -114,7 +112,7 @@ export function BasicInfoForm({
       // 所属組織はADMINのみ送信（他ロールが送ってもサーバー側で無視される）
       ...(canEditDepartment ? { departmentId: departmentId ? Number(departmentId) : null } : {}),
       nearestStationId: nearestStationId ? Number(nearestStationId) : null,
-      experienceYears: experienceYears ? Number(experienceYears) : null,
+      hireDate: hireDate || null,
       finalSchoolName: finalSchoolName.trim() || null,
       finalDepartmentName: finalDepartmentName.trim() || null,
       finalSchoolType: finalSchoolType || null,
@@ -212,14 +210,12 @@ export function BasicInfoForm({
             />
           </div>
           <div>
-            <label className="form-label">経験年数</label>
+            <label className="form-label">入社年月日</label>
             <input
-              type="number"
-              min={0}
-              max={100}
+              type="date"
               className="form-input"
-              value={experienceYears}
-              onChange={(e) => setExperienceYears(e.target.value)}
+              value={hireDate}
+              onChange={(e) => setHireDate(e.target.value)}
             />
           </div>
         </div>

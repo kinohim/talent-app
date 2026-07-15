@@ -36,7 +36,7 @@ type Employee = {
   gender: string | null;
   departmentName: string | null;
   nearestStationName: string | null;
-  experienceYears: number | null;
+  hireDate: string | Date | null;
   careerSummary: string | null;
   selfPr: string | null;
   finalSchoolName: string | null;
@@ -113,10 +113,7 @@ export function ResumeDetail({
           <Field label="性別" value={employee.gender ? GENDER_LABEL[employee.gender] : "-"} />
           <Field label="所属組織" value={employee.departmentName ?? "未設定"} />
           <Field label="最寄り駅" value={employee.nearestStationName ?? "未設定"} />
-          <Field
-            label="経験年数"
-            value={employee.experienceYears !== null ? `${employee.experienceYears}年` : "-"}
-          />
+          <Field label="入社年月日" value={fmtDate(employee.hireDate)} />
         </div>
         <div className="grid grid-cols-1 gap-4 border-t border-slate-100 pt-4 sm:grid-cols-2">
           <Field label="最終学歴" value={employee.finalSchoolName ?? "-"} />

@@ -85,7 +85,7 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
               ? { departmentId: basic.departmentId ?? null }
               : {}),
             nearestStationId: basic.nearestStationId ?? null,
-            experienceYears: basic.experienceYears ?? null,
+            hireDate: basic.hireDate ? new Date(basic.hireDate) : null,
             finalSchoolName: basic.finalSchoolName ?? null,
             finalDepartmentName: basic.finalDepartmentName ?? null,
             finalSchoolType: basic.finalSchoolType ?? null,

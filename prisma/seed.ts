@@ -318,7 +318,7 @@ async function main() {
         nameKana: e.nameKana,
         departmentId: e.departmentId,
         nearestStationId: stations[0].id,
-        experienceYears: 5,
+        hireDate: new Date("2020-04-01"),
         careerSummary: "システム開発プロジェクトに従事。",
         selfPr: "継続的な学習を心がけています。",
         createdBy: SEED_ACTOR,
