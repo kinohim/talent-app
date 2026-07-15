@@ -35,13 +35,8 @@ export default async function MyPage() {
   const editMenu = [
     {
       href: `/resumes/${employeeId}/edit/basic`,
-      label: "基本情報編集",
-      description: "氏名・生年月日・所属組織・最終学歴等（EDT001）",
-    },
-    {
-      href: `/resumes/${employeeId}/edit/summary`,
-      label: "経歴概要・自己PR編集",
-      description: "経歴概要・自己PRの自由記述（EDT002）",
+      label: "基本情報・経歴概要編集",
+      description: "氏名・生年月日・所属組織・最終学歴・経歴概要・自己PR等（EDT001・EDT002）",
     },
     {
       href: `/resumes/${employeeId}/edit/skills`,
@@ -63,7 +58,7 @@ export default async function MyPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-xl font-bold">マイページ</h1>
+        <h1 className="text-xl font-bold">マイ経歴書</h1>
         <p className="text-sm text-slate-500">
           {serialized.name}（{employeeId}）
         </p>

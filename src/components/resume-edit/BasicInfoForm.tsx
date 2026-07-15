@@ -8,6 +8,8 @@ import { ErrorList, FormActions, patchEmployeeSection } from "./patch-section";
  * EDT001 基本情報登録（/resumes/[employeeId]/edit/basic）。
  * 本人編集・他社員編集（MANAGER/ADMIN）で共通のフォーム（screens.md「実装上の提案」）。
  * 所属組織欄はADMINのみ編集可（canEditDepartmentフラグで出し分け、detailed-design.md EDT001）。
+ * EDT002（経歴概要・自己PR）の入力もこの画面に統合し、basic/summary両セクションを
+ * 1回のPATCHでまとめて送信する。
  */
 
 type DateLike = string | Date | null;
@@ -27,6 +29,8 @@ type InitialData = {
   finalSchoolType: string | null;
   graduationYearMonth: DateLike;
   graduationStatus: string | null;
+  careerSummary: string | null;
+  selfPr: string | null;
 };
 
 type Props = {
@@ -92,6 +96,8 @@ export function BasicInfoForm({
     toDateInputValue(initialData.graduationYearMonth).slice(0, 7)
   );
   const [graduationStatus, setGraduationStatus] = useState(initialData.graduationStatus ?? "");
+  const [careerSummary, setCareerSummary] = useState(initialData.careerSummary ?? "");
+  const [selfPr, setSelfPr] = useState(initialData.selfPr ?? "");
   const [errors, setErrors] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
@@ -115,8 +121,12 @@ export function BasicInfoForm({
       graduationYearMonth: graduationYearMonth || null,
       graduationStatus: graduationStatus || null,
     };
+    const summary = {
+      careerSummary: careerSummary.trim() || null,
+      selfPr: selfPr.trim() || null,
+    };
 
-    const result = await patchEmployeeSection(initialData.employeeId, { basic });
+    const result = await patchEmployeeSection(initialData.employeeId, { basic, summary });
     setSubmitting(false);
 
     if (result) {
@@ -283,6 +293,30 @@ export function BasicInfoForm({
               ))}
             </select>
           </div>
+        </div>
+      </section>
+
+      <section className="card space-y-4">
+        <h2 className="font-semibold">経歴概要・自己PR</h2>
+        <div>
+          <label className="form-label">経歴概要（2000文字以内）</label>
+          <textarea
+            className="form-input"
+            rows={8}
+            maxLength={2000}
+            value={careerSummary}
+            onChange={(e) => setCareerSummary(e.target.value)}
+          />
+        </div>
+        <div>
+          <label className="form-label">自己PR（2000文字以内）</label>
+          <textarea
+            className="form-input"
+            rows={8}
+            maxLength={2000}
+            value={selfPr}
+            onChange={(e) => setSelfPr(e.target.value)}
+          />
         </div>
       </section>
 

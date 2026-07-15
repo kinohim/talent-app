@@ -9,7 +9,8 @@ import { getEditContext } from "../edit-access";
 type RouteParams = { params: Promise<{ employeeId: string }> };
 
 /**
- * EDT001 基本情報登録（/resumes/[employeeId]/edit/basic）。
+ * EDT001+EDT002 基本情報・経歴概要編集（/resumes/[employeeId]/edit/basic）。
+ * マイページの編集メニューを減らすため、EDT002（経歴概要・自己PR）をこの画面に統合している。
  * 権限チェックはgetEditContext（一次: 未ログイン/存在チェック、最終判定はPATCH API側）。
  */
 export default async function EditBasicPage({ params }: RouteParams) {
@@ -29,7 +30,7 @@ export default async function EditBasicPage({ params }: RouteParams) {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-bold">基本情報編集</h1>
+      <h1 className="text-xl font-bold">基本情報・経歴概要編集</h1>
       <p className="text-sm text-slate-500">
         {serialized.name}（{employeeId}）
       </p>
