@@ -56,7 +56,7 @@ async function main() {
     parentId: div2.id,
   });
 
-  await ensureDepartment({
+  const grp1 = await ensureDepartment({
     code: "GRP01",
     departmentName: "基盤Gr",
     orgLevel: "GROUP",
@@ -281,6 +281,30 @@ async function main() {
       departmentId: grp3.id, // ソリューションGr（第二開発部配下 → 000003とは別部署）
       role: "GENERAL" as const,
       email: "shiro.sekkei@example.com",
+    },
+    {
+      employeeId: "000006",
+      name: "基盤 五実",
+      nameKana: "キバン イツミ",
+      departmentId: grp1.id, // 基盤Gr（第一開発部配下 → 000003と同一部署に解決）
+      role: "GENERAL" as const,
+      email: "itsumi.kiban@example.com",
+    },
+    {
+      employeeId: "000007",
+      name: "人事 六子",
+      nameKana: "ジンジ ムツコ",
+      departmentId: dept3.id, // 人事総務部
+      role: "HR_SALES" as const,
+      email: "mutsuko.jinji@example.com",
+    },
+    {
+      employeeId: "000008",
+      name: "試験 七海",
+      nameKana: "シケン ナナミ",
+      departmentId: dept2.id, // 第二開発部（部署レベル所属）
+      role: "GENERAL" as const,
+      email: "nanami.shiken@example.com",
     },
   ];
 
