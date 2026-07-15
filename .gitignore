@@ -11,10 +11,13 @@
 # misc
 .DS_Store
 *.pem
+# Windows からのコピーで生じる NTFS ADS 由来のゴミファイル
+*Zone.Identifier
 
 # env
 .env
 .env*.local
+.env.bak*
 
 # logs
 npm-debug.log*
