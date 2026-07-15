@@ -6,7 +6,7 @@ import { authOptions } from "@/lib/auth";
 type MenuItem = { href: string; label: string; description: string };
 
 const GENERAL_MENU: MenuItem[] = [
-  { href: "/mypage", label: "マイページ", description: "自分の経歴書のメニュー一覧・各項目の編集画面へ進む" },
+  { href: "/mypage", label: "マイ経歴書", description: "自分の経歴書のメニュー一覧・各項目の編集画面へ進む" },
   {
     href: "/resumes",
     label: "経歴書一覧",

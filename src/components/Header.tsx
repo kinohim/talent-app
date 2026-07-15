@@ -18,7 +18,7 @@ export function Header({
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
         <div className="flex items-center gap-6">
           <Link href="/" className="text-lg font-bold text-brand-700">
-            talent-app
+            経歴書
           </Link>
           {user && (
             <nav className="flex items-center gap-4 text-sm text-slate-600">
