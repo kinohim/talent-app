@@ -6,10 +6,11 @@ import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/authz";
 import { apiConflict, apiForbidden, apiUnauthenticated, apiValidationError, parsePagination } from "@/lib/api-response";
 import { accountCreateSchema } from "@/lib/validation/account";
-import { searchAccounts, type AccountStatus } from "@/lib/account-search";
+import { searchAccounts, type AccountStatus, type AccountSortBy } from "@/lib/account-search";
 
 const ROLE_VALUES = new Set<string>(["GENERAL", "MANAGER", "HR_SALES", "ADMIN"]);
 const STATUS_VALUES = new Set<string>(["ACTIVE", "INACTIVE"]);
+const SORT_BY_VALUES = new Set<string>(["employeeId", "name", "department", "role", "status"]);
 
 function toIdList(value: string | null): number[] {
   if (!value) return [];
@@ -33,11 +34,16 @@ export async function GET(req: NextRequest) {
   const roles = (sp.get("roles")?.split(",") ?? []).filter((r) => ROLE_VALUES.has(r)) as Role[];
   const statuses = (sp.get("statuses")?.split(",") ?? []).filter((s) => STATUS_VALUES.has(s)) as AccountStatus[];
 
+  const sortBy = SORT_BY_VALUES.has(sp.get("sortBy") ?? "") ? (sp.get("sortBy") as AccountSortBy) : "employeeId";
+  const sortOrder = sp.get("sortOrder") === "desc" ? "desc" : "asc";
+
   const result = await searchAccounts({
     name: sp.get("name")?.trim() || undefined,
     departmentIds: toIdList(sp.get("departmentIds")),
     roles,
     statuses,
+    sortBy,
+    sortOrder,
     page,
     pageSize,
   });

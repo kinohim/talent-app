@@ -135,6 +135,31 @@ export function resolveDepartmentLevelIdInMemory(
   return null;
 }
 
+/** 事業部/部/Grのフル階層パス文字列を作る（REF002一覧の所属組織列表示用）。 */
+export function resolveDepartmentPath(
+  records: DepartmentRecord[] | Map<number, DepartmentRecord>,
+  departmentId: number | null
+): string | null {
+  const byId =
+    records instanceof Map
+      ? records
+      : new Map(records.map((record) => [record.id, record]));
+
+  const names: string[] = [];
+  let currentId = departmentId;
+  const visited = new Set<number>();
+  while (currentId !== null) {
+    if (visited.has(currentId)) break; // 循環データへの安全ガード
+    visited.add(currentId);
+
+    const dept = byId.get(currentId);
+    if (!dept) break;
+    names.unshift(dept.departmentName);
+    currentId = dept.parentId;
+  }
+  return names.length > 0 ? names.join("/") : null;
+}
+
 export type DepartmentOption = { id: number; label: string; orgLevel: OrgLevel };
 
 /** セレクトボックス用に階層をインデント表示したフラットな選択肢を作る。 */

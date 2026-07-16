@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/authz";
 import { apiConflict, apiForbidden, apiUnauthenticated, apiValidationError } from "@/lib/api-response";
 import { certificationCategorySchema } from "@/lib/validation/master";
+import { generateCertificationCategoryCode } from "@/lib/category-code";
 
 /** GET /api/certification-categories — 資格カテゴリ一覧（参照はログイン済み全員可、MST002）。 */
 export async function GET(req: NextRequest) {
@@ -29,8 +30,9 @@ export async function POST(req: NextRequest) {
   if (!parsed.success) return apiValidationError(parsed.error);
 
   try {
+    const code = await generateCertificationCategoryCode();
     const created = await prisma.certificationCategory.create({
-      data: { ...parsed.data, createdBy: session.user.employeeId, updatedBy: session.user.employeeId },
+      data: { ...parsed.data, code, createdBy: session.user.employeeId, updatedBy: session.user.employeeId },
     });
     return NextResponse.json(created, { status: 201 });
   } catch (err) {

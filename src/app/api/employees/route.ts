@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getApiSession } from "@/lib/api-auth";
 import { apiUnauthenticated, parsePagination } from "@/lib/api-response";
-import { searchEmployees, type EmployeeSearchParams } from "@/lib/employee-search";
+import { searchEmployees, type EmployeeSearchParams, type EmployeeSortBy } from "@/lib/employee-search";
 
 /**
  * GET /api/employees — 経歴書一覧・横断検索（REF002）。
@@ -9,8 +9,10 @@ import { searchEmployees, type EmployeeSearchParams } from "@/lib/employee-searc
  * - 全ロールとも全社員が検索対象（認可で絞り込まない、ADR 0008）
  * - 各行にcanViewDetailを付与（GENERALは他部署の行の詳細リンクを非活性化）
  * - 一覧行に経歴書の全項目（生年月日・学歴・自己PR等）は含めない
- * - 論理削除済みはデフォルト非表示、includeDeleted=trueで表示（ADR 0004）
+ * - 論理削除済みは常に非表示（一覧からの削除済み表示切替は廃止）
  */
+
+const SORT_BY_VALUES: EmployeeSortBy[] = ["employeeId", "name", "department", "hireDate"];
 
 function parseIdList(value: string | null): number[] {
   if (!value) return [];
@@ -48,7 +50,11 @@ export async function GET(req: NextRequest) {
     certificationIds: parseIdList(searchParams.get("certificationIds")),
     certificationMatch: searchParams.get("certificationMatch") === "and" ? "and" : "or",
     siteIds: parseIdList(searchParams.get("siteIds")),
-    includeDeleted: searchParams.get("includeDeleted") === "true",
+    siteScope: searchParams.get("siteScope") === "all" ? "all" : "current",
+    sortBy: (SORT_BY_VALUES as string[]).includes(searchParams.get("sortBy") ?? "")
+      ? (searchParams.get("sortBy") as EmployeeSortBy)
+      : "employeeId",
+    sortOrder: searchParams.get("sortOrder") === "desc" ? "desc" : "asc",
     page,
     pageSize,
   };

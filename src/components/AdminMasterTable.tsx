@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { StationSearchInput } from "@/components/resume-edit/StationSearchInput";
 
 /**
  * マスタ管理画面（S-14/S-15/S-18等）共通コンポーネント。
@@ -23,7 +24,10 @@ export type FieldDef =
       valueType: "number" | "string";
       options: { value: string; label: string }[];
     }
-  | { name: string; label: string; type: "checkbox" };
+  | { name: string; label: string; type: "checkbox" }
+  // 駅マスタのfind-or-create検索入力(MST005: 最寄り駅)。displayKeyはAdminRecord内の
+  // 表示用駅名プロパティ(数値idであるname本体とは別に、編集開始時の初期表示名として使う)
+  | { name: string; label: string; type: "station-search"; displayKey: string };
 
 export type ColumnDef = {
   key: string;
@@ -71,6 +75,10 @@ function buildPayload(fields: FieldDef[], values: Record<string, string>): Recor
       payload[field.name] = values[field.name] ? Number(values[field.name]) : null;
       continue;
     }
+    if (field.type === "station-search") {
+      payload[field.name] = values[field.name] ? Number(values[field.name]) : null;
+      continue;
+    }
     const trimmed = (values[field.name] ?? "").trim();
     payload[field.name] = trimmed === "" && field.type === "text" && field.nullable ? null : trimmed;
   }
@@ -80,18 +88,21 @@ function buildPayload(fields: FieldDef[], values: Record<string, string>): Recor
 export function AdminMasterTable({ resourceLabel, apiBase, columns, fields, initialItems }: Props) {
   const [items, setItems] = useState<AdminRecord[]>(initialItems);
   const [editingId, setEditingId] = useState<number | "new" | null>(null);
+  const [editingItem, setEditingItem] = useState<AdminRecord | null>(null);
   const [values, setValues] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   function startCreate() {
     setEditingId("new");
+    setEditingItem(null);
     setValues(getFormValues(fields, null));
     setError(null);
   }
 
   function startEdit(item: AdminRecord) {
     setEditingId(item.id);
+    setEditingItem(item);
     setValues(getFormValues(fields, item));
     setError(null);
   }
@@ -160,7 +171,9 @@ export function AdminMasterTable({ resourceLabel, apiBase, columns, fields, init
             <div key={field.name}>
               <label className="form-label" htmlFor={field.name}>
                 {field.label}
-                {field.type !== "checkbox" && field.required && <span className="ml-1 text-red-500">*</span>}
+                {(field.type === "text" || field.type === "select") && field.required && (
+                  <span className="ml-1 text-red-500">*</span>
+                )}
               </label>
               {field.type === "text" && (
                 <input
@@ -196,6 +209,16 @@ export function AdminMasterTable({ resourceLabel, apiBase, columns, fields, init
                   onChange={(e) =>
                     setValues((v) => ({ ...v, [field.name]: e.target.checked ? "true" : "false" }))
                   }
+                />
+              )}
+              {field.type === "station-search" && (
+                <StationSearchInput
+                  initialName={
+                    typeof editingItem?.[field.displayKey] === "string"
+                      ? (editingItem[field.displayKey] as string)
+                      : null
+                  }
+                  onSelect={(id) => setValues((v) => ({ ...v, [field.name]: id ? String(id) : "" }))}
                 />
               )}
             </div>

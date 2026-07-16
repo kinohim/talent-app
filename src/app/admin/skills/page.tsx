@@ -13,7 +13,6 @@ export default async function SkillsAdminPage() {
 
   const categoryItems: AdminRecord[] = categories.map((c) => ({
     id: c.id,
-    code: c.code,
     categoryName: c.categoryName,
   }));
 
@@ -36,14 +35,8 @@ export default async function SkillsAdminPage() {
           resourceLabel="スキルカテゴリ"
           apiBase="/api/skill-categories"
           initialItems={categoryItems}
-          columns={[
-            { key: "code", label: "カテゴリコード" },
-            { key: "categoryName", label: "カテゴリ名" },
-          ]}
-          fields={[
-            { name: "code", label: "カテゴリコード", type: "text", required: true, maxLength: 10 },
-            { name: "categoryName", label: "カテゴリ名", type: "text", required: true, maxLength: 100 },
-          ]}
+          columns={[{ key: "categoryName", label: "カテゴリ名" }]}
+          fields={[{ name: "categoryName", label: "カテゴリ名", type: "text", required: true, maxLength: 100 }]}
         />
       </section>
 

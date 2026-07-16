@@ -28,6 +28,11 @@ function fmtYearMonth(value: string | Date | null) {
   return formatted === "-" ? "-" : formatted.slice(0, 7);
 }
 
+// CJK氏名はアルファベットの「イニシャル」に馴染まないため、先頭1文字のみ残しマスクする代替案とする（REF005）
+function maskName(name: string) {
+  return name.length <= 1 ? name : `${name[0]}${"○".repeat(name.length - 1)}`;
+}
+
 type Employee = {
   employeeId: string;
   name: string;
@@ -36,6 +41,7 @@ type Employee = {
   gender: string | null;
   departmentName: string | null;
   nearestStationName: string | null;
+  nearestStationLines: string[];
   hireDate: string | Date | null;
   careerSummary: string | null;
   selfPr: string | null;
@@ -80,21 +86,32 @@ export function ResumeDetail({
   employee,
   editBase,
   showPdfLink = true,
+  anonymize = false,
 }: {
   employee: Employee;
   /** 編集権限がある場合の編集画面のベースパス（例: /resumes/000001/edit）。無ければnull */
   editBase: string | null;
   /** PDF出力（REF005）導線の表示有無。プレビュー画面自身での二重表示を避けるためfalseにできる */
   showPdfLink?: boolean;
+  /** 印刷用プレビュー（REF005）で氏名・最寄り駅を匿名化する */
+  anonymize?: boolean;
 }) {
   const editHref = (section: string) => (editBase ? `${editBase}/${section}` : null);
+
+  const displayName = anonymize ? maskName(employee.name) : employee.name;
+  const displayNameKana = anonymize ? maskName(employee.nameKana) : employee.nameKana;
+  const nearestStationValue = anonymize
+    ? "未公開"
+    : employee.nearestStationName
+      ? `${[...employee.nearestStationLines].join("・")} ${employee.nearestStationName}`.trim()
+      : "未設定";
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold">
-            {employee.name}（{employee.nameKana}）
+            {displayName}（{displayNameKana}）
             {employee.deletedAt && <span className="ml-2 text-sm text-red-500">(削除済み)</span>}
           </h1>
           <p className="text-sm text-slate-500">社員ID: {employee.employeeId}</p>
@@ -112,7 +129,7 @@ export function ResumeDetail({
           <Field label="生年月日" value={fmtDate(employee.birthDate)} />
           <Field label="性別" value={employee.gender ? GENDER_LABEL[employee.gender] : "-"} />
           <Field label="所属組織" value={employee.departmentName ?? "未設定"} />
-          <Field label="最寄り駅" value={employee.nearestStationName ?? "未設定"} />
+          <Field label="最寄り駅" value={nearestStationValue} />
           <Field label="入社年月日" value={fmtDate(employee.hireDate)} />
         </div>
         <div className="grid grid-cols-1 gap-4 border-t border-slate-100 pt-4 sm:grid-cols-2">
@@ -131,7 +148,7 @@ export function ResumeDetail({
       </section>
 
       <section className="card space-y-2">
-        <SectionHeader title="経歴概要・自己PR" editHref={editHref("summary")} />
+        <SectionHeader title="経歴概要・自己PR" editHref={editHref("basic")} />
         <div>
           <p className="text-xs text-slate-500">経歴概要</p>
           <p className="whitespace-pre-wrap text-sm text-slate-700">{employee.careerSummary || "-"}</p>
@@ -143,7 +160,7 @@ export function ResumeDetail({
       </section>
 
       <section className="card space-y-2">
-        <SectionHeader title="保有スキル" editHref={editHref("skills")} />
+        <SectionHeader title="保有スキル" editHref={editHref("basic")} />
         {employee.skills.length === 0 ? (
           <p className="text-sm text-slate-400">登録されているスキルはありません</p>
         ) : (
@@ -160,7 +177,7 @@ export function ResumeDetail({
       </section>
 
       <section className="card space-y-2">
-        <SectionHeader title="保有資格" editHref={editHref("certifications")} />
+        <SectionHeader title="保有資格" editHref={editHref("basic")} />
         {employee.certifications.length === 0 ? (
           <p className="text-sm text-slate-400">登録されている資格はありません</p>
         ) : (

@@ -9,12 +9,16 @@ import { collectDescendantIds, loadDepartments } from "@/lib/department-tree";
  */
 
 export type AccountStatus = "ACTIVE" | "INACTIVE";
+export type AccountSortBy = "employeeId" | "name" | "department" | "role" | "status";
+export type AccountSortOrder = "asc" | "desc";
 
 export type AccountSearchParams = {
   name?: string;
   departmentIds: number[];
   roles: Role[];
   statuses: AccountStatus[];
+  sortBy: AccountSortBy;
+  sortOrder: AccountSortOrder;
   page: number;
   pageSize: number;
 };
@@ -59,11 +63,22 @@ export async function searchAccounts(params: AccountSearchParams): Promise<Accou
     userWhere.isActive = params.statuses[0] === "ACTIVE";
   }
 
+  const orderBy: Record<string, unknown> =
+    params.sortBy === "name"
+      ? { employee: { name: params.sortOrder } }
+      : params.sortBy === "department"
+        ? { employee: { department: { departmentName: params.sortOrder } } }
+        : params.sortBy === "role"
+          ? { role: params.sortOrder }
+          : params.sortBy === "status"
+            ? { isActive: params.sortOrder }
+            : { employeeId: params.sortOrder };
+
   const [users, total] = await Promise.all([
     prisma.user.findMany({
       where: userWhere,
       include: { employee: { include: { department: true } } },
-      orderBy: { employeeId: "asc" },
+      orderBy,
       skip: (params.page - 1) * params.pageSize,
       take: params.pageSize,
     }),

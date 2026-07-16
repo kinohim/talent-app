@@ -35,7 +35,7 @@ export default async function ResumePreviewPage({ params }: RouteParams) {
       <div className="flex justify-end no-print">
         <PrintButton />
       </div>
-      <ResumeDetail employee={serializeEmployeeDetail(employee)} editBase={null} showPdfLink={false} />
+      <ResumeDetail employee={serializeEmployeeDetail(employee)} editBase={null} showPdfLink={false} anonymize />
     </div>
   );
 }

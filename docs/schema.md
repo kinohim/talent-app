@@ -149,6 +149,8 @@ deleted_at, deleted_by, deleted_program   -- 論理削除。NULL=有効、日付
 |---|---|---|---|
 | id | SERIAL | PK | |
 | site_name | VARCHAR(100) | UK, NOT NULL | MST005で管理。システム全体でユニーク |
+| nearest_station_id | INT | FK→station.id, NULL可 | MST005で管理（2026-07追加）。employeeの最寄駅と同じstationマスタを参照 |
+| address | VARCHAR(255) | NULL可 | MST005で管理（2026-07追加）。自由記述 |
 
 ## project（プロジェクト経歴）
 

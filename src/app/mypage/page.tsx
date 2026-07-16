@@ -35,23 +35,8 @@ export default async function MyPage() {
   const editMenu = [
     {
       href: `/resumes/${employeeId}/edit/basic`,
-      label: "基本情報・経歴概要編集",
-      description: "氏名・生年月日・所属組織・最終学歴・経歴概要・自己PR等（EDT001・EDT002）",
-    },
-    {
-      href: `/resumes/${employeeId}/edit/skills`,
-      label: "保有スキル編集",
-      description: `登録件数: ${serialized.skills.length}件（EDT003）`,
-    },
-    {
-      href: `/resumes/${employeeId}/edit/certifications`,
-      label: "保有資格編集",
-      description: `登録件数: ${serialized.certifications.length}件（EDT004）`,
-    },
-    {
-      href: `/resumes/${employeeId}/edit/projects`,
-      label: "現場（プロジェクト）経歴編集",
-      description: `登録件数: ${serialized.projects.length}件（EDT005）`,
+      label: "基本情報・経歴書編集",
+      description: `氏名・生年月日・所属組織・最終学歴・経歴概要・自己PR・保有スキル(${serialized.skills.length}件)・保有資格(${serialized.certifications.length}件)`,
     },
   ];
 
@@ -64,21 +49,19 @@ export default async function MyPage() {
         </p>
       </div>
 
-      <section className="card space-y-2">
-        <div className="flex items-center justify-between">
-          <h2 className="font-semibold">経歴書</h2>
-          <div className="flex gap-4 text-sm">
-            <Link href={`/resumes/${employeeId}`} className="text-brand-600 hover:underline">
-              確認する
-            </Link>
-            <Link href={`/resumes/${employeeId}/preview`} className="text-brand-600 hover:underline">
-              PDF出力
-            </Link>
-          </div>
-        </div>
+      <section className="card space-y-3">
+        <h2 className="font-semibold">経歴書</h2>
         <p className="text-sm text-slate-500">
           自分の経歴書の全項目を確認するには「確認する」から経歴書詳細へ進んでください。
         </p>
+        <div className="flex flex-wrap gap-4">
+          <Link href={`/resumes/${employeeId}`} className="btn-secondary px-8 py-3 text-base">
+            確認する
+          </Link>
+          <Link href={`/resumes/${employeeId}/preview`} className="btn-primary px-8 py-3 text-base">
+            PDF出力
+          </Link>
+        </div>
       </section>
 
       <section className="space-y-3">

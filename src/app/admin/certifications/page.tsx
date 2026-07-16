@@ -13,7 +13,6 @@ export default async function CertificationsAdminPage() {
 
   const categoryItems: AdminRecord[] = categories.map((c) => ({
     id: c.id,
-    code: c.code,
     categoryName: c.categoryName,
     description: c.description,
   }));
@@ -38,12 +37,10 @@ export default async function CertificationsAdminPage() {
           apiBase="/api/certification-categories"
           initialItems={categoryItems}
           columns={[
-            { key: "code", label: "カテゴリコード" },
             { key: "categoryName", label: "カテゴリ名" },
             { key: "description", label: "説明" },
           ]}
           fields={[
-            { name: "code", label: "カテゴリコード", type: "text", required: true, maxLength: 10 },
             { name: "categoryName", label: "カテゴリ名", type: "text", required: true, maxLength: 100 },
             { name: "description", label: "説明", type: "text", maxLength: 255, nullable: true },
           ]}

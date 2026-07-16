@@ -4,11 +4,15 @@ import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
 import { flattenDepartmentOptions } from "@/lib/department-tree";
 import { MultiSelectDropdown } from "@/components/MultiSelectDropdown";
+import { SortableTh } from "@/components/SortableTh";
 import {
   loadSearchMasters,
   searchEmployees,
   type EmployeeSearchParams,
+  type EmployeeSortBy,
 } from "@/lib/employee-search";
+
+const SORT_BY_VALUES: EmployeeSortBy[] = ["employeeId", "name", "department", "hireDate"];
 
 /**
  * REF002 経歴書一覧（/resumes）。
@@ -64,7 +68,11 @@ export default async function ResumesPage({ searchParams }: { searchParams: Sear
     certificationIds: toIdList(sp.certificationIds),
     certificationMatch: first(sp.certificationMatch) === "and" ? "and" : "or",
     siteIds: toIdList(sp.siteIds),
-    includeDeleted: first(sp.includeDeleted) === "true",
+    siteScope: first(sp.siteScope) === "all" ? "all" : "current",
+    sortBy: SORT_BY_VALUES.includes(first(sp.sortBy) as EmployeeSortBy)
+      ? (first(sp.sortBy) as EmployeeSortBy)
+      : "employeeId",
+    sortOrder: first(sp.sortOrder) === "desc" ? "desc" : "asc",
     page: Math.max(1, toOptionalInt(first(sp.page)) ?? 1),
     pageSize: PAGE_SIZE,
   };
@@ -76,8 +84,8 @@ export default async function ResumesPage({ searchParams }: { searchParams: Sear
   const departmentOptions = flattenDepartmentOptions(masters.departmentTree);
   const totalPages = Math.max(1, Math.ceil(result.total / result.pageSize));
 
-  // ページネーションリンク用: 現在の検索条件を維持してpageのみ差し替える
-  const buildPageQuery = (page: number) => {
+  // ページネーション・ソートリンク用: 現在の検索条件を維持して指定項目のみ差し替える
+  const buildQuery = (overrides: { page?: number; sortBy?: string; sortOrder?: string }) => {
     const query = new URLSearchParams();
     if (params.name) query.set("name", params.name);
     if (params.departmentId !== undefined) query.set("departmentId", String(params.departmentId));
@@ -89,13 +97,17 @@ export default async function ResumesPage({ searchParams }: { searchParams: Sear
     if (params.certificationIds.length > 0)
       query.set("certificationMatch", params.certificationMatch);
     for (const id of params.siteIds) query.append("siteIds", String(id));
-    if (params.includeDeleted) query.set("includeDeleted", "true");
-    query.set("page", String(page));
+    if (params.siteIds.length > 0) query.set("siteScope", params.siteScope);
+    query.set("sortBy", overrides.sortBy ?? params.sortBy);
+    query.set("sortOrder", overrides.sortOrder ?? params.sortOrder);
+    query.set("page", String(overrides.page ?? params.page));
     return `/resumes?${query.toString()}`;
   };
+  const buildPageQuery = (page: number) => buildQuery({ page });
+  const buildSortHref = (sortBy: string, sortOrder: "asc" | "desc") =>
+    buildQuery({ page: 1, sortBy, sortOrder });
 
-  const hasMatchColumns =
-    params.skillIds.length > 0 || params.certificationIds.length > 0 || params.siteIds.length > 0;
+  const hasMatchColumns = params.siteIds.length > 0;
 
   return (
     <div className="space-y-4">
@@ -204,19 +216,31 @@ export default async function ResumesPage({ searchParams }: { searchParams: Sear
               defaultValues={params.siteIds}
               placeholder="現場を選択"
             />
-            <p className="mt-1 text-xs text-slate-400">過去にその現場にいた社員を検索できます</p>
+            <div className="mt-1 flex gap-4 text-sm">
+              <label className="flex items-center gap-1">
+                <input
+                  type="radio"
+                  name="siteScope"
+                  value="current"
+                  defaultChecked={params.siteScope === "current"}
+                />
+                現在のみ
+              </label>
+              <label className="flex items-center gap-1">
+                <input
+                  type="radio"
+                  name="siteScope"
+                  value="all"
+                  defaultChecked={params.siteScope === "all"}
+                />
+                過去を含む
+              </label>
+            </div>
           </div>
         </div>
+        <input type="hidden" name="sortBy" value={params.sortBy} />
+        <input type="hidden" name="sortOrder" value={params.sortOrder} />
         <div className="flex flex-wrap items-center gap-4">
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              name="includeDeleted"
-              value="true"
-              defaultChecked={params.includeDeleted}
-            />
-            削除済みを表示
-          </label>
           <button type="submit" className="btn-primary">
             検索
           </button>
@@ -231,32 +255,29 @@ export default async function ResumesPage({ searchParams }: { searchParams: Sear
       <table className="table-base">
         <thead>
           <tr>
-            <th>社員ID</th>
-            <th>氏名</th>
+            <SortableTh label="社員ID" columnKey="employeeId" activeSortBy={params.sortBy} activeSortOrder={params.sortOrder} buildHref={buildSortHref} />
+            <SortableTh label="氏名" columnKey="name" activeSortBy={params.sortBy} activeSortOrder={params.sortOrder} buildHref={buildSortHref} />
             <th>カナ</th>
-            <th>所属組織</th>
-            <th>入社年月日</th>
-            {hasMatchColumns && <th>ヒットしたスキル / 資格 / 現場</th>}
+            <SortableTh label="所属組織" columnKey="department" activeSortBy={params.sortBy} activeSortOrder={params.sortOrder} buildHref={buildSortHref} />
+            <SortableTh label="入社年月日" columnKey="hireDate" activeSortBy={params.sortBy} activeSortOrder={params.sortOrder} buildHref={buildSortHref} />
+            <th>保有スキル</th>
+            <th>保有資格</th>
+            {hasMatchColumns && <th>ヒットした現場</th>}
             <th></th>
           </tr>
         </thead>
         <tbody>
           {result.items.map((row) => (
-            <tr key={row.employeeId} className={row.deletedAt ? "opacity-50" : ""}>
+            <tr key={row.employeeId}>
               <td>{row.employeeId}</td>
-              <td>
-                {row.name}
-                {row.deletedAt && <span className="ml-2 text-xs text-red-500">(削除済み)</span>}
-              </td>
+              <td>{row.name}</td>
               <td>{row.nameKana}</td>
-              <td>{row.department?.name ?? "-"}</td>
+              <td>{row.department?.path ?? "-"}</td>
               <td>{row.hireDate ? row.hireDate.toISOString().slice(0, 10) : "-"}</td>
+              <td className="text-xs text-slate-600">{row.allSkills.join("、") || "-"}</td>
+              <td className="text-xs text-slate-600">{row.allCertifications.join("、") || "-"}</td>
               {hasMatchColumns && (
-                <td className="text-xs text-slate-600">
-                  {[...row.matchedSkills, ...row.matchedCertifications, ...row.matchedSites].join(
-                    "、"
-                  ) || "-"}
-                </td>
+                <td className="text-xs text-slate-600">{row.matchedSites.join("、") || "-"}</td>
               )}
               <td>
                 {row.canViewDetail ? (
@@ -276,7 +297,7 @@ export default async function ResumesPage({ searchParams }: { searchParams: Sear
           ))}
           {result.items.length === 0 && (
             <tr>
-              <td colSpan={hasMatchColumns ? 7 : 6} className="py-6 text-center text-slate-400">
+              <td colSpan={hasMatchColumns ? 8 : 7} className="py-6 text-center text-slate-400">
                 該当する社員がいません
               </td>
             </tr>

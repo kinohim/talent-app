@@ -147,11 +147,10 @@ export function DepartmentTreeManager({ initialTree }: { initialTree: Department
   function renderNode(node: DepartmentTreeNode, depth: number) {
     const childLevel = childLevelOf(node.orgLevel);
     return (
-      <div key={node.id}>
-        <div
-          className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 py-2"
-          style={{ paddingLeft: depth * 24 }}
-        >
+      <div key={node.id} className={depth > 0 ? "relative" : undefined}>
+        {/* 親から派生したことを示す接続線(MST004: 縦線は子コンテナのborder-left、横線はこのtick) */}
+        {depth > 0 && <span className="absolute left-[-17px] top-[18px] h-px w-4 bg-slate-300" aria-hidden />}
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 py-2">
           <div className="flex items-center gap-2">
             <span className="rounded bg-slate-100 px-2 py-0.5 text-xs text-slate-500">
               {ORG_LEVEL_LABEL[node.orgLevel]}
@@ -184,7 +183,11 @@ export function DepartmentTreeManager({ initialTree }: { initialTree: Department
             </button>
           </div>
         </div>
-        {node.children.map((child) => renderNode(child, depth + 1))}
+        {node.children.length > 0 && (
+          <div className="ml-3 border-l border-slate-300 pl-4">
+            {node.children.map((child) => renderNode(child, depth + 1))}
+          </div>
+        )}
       </div>
     );
   }

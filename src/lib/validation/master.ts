@@ -17,8 +17,8 @@ export const departmentSchema = z
     path: ["parentId"],
   });
 
+// カテゴリコード(code)はMST001で自動採番し画面には表示しないため、クライアント入力の対象外(2026-07確定)
 export const skillCategorySchema = z.object({
-  code: z.string().trim().min(1, "カテゴリコードは必須です").max(10),
   categoryName: z.string().trim().min(1, "カテゴリ名は必須です").max(100),
 });
 
@@ -38,8 +38,8 @@ export const skillVersionSchema = z.object({
   isActive: z.boolean().default(true),
 });
 
+// カテゴリコード(code)はMST002で自動採番し画面には表示しないため、クライアント入力の対象外(2026-07確定)
 export const certificationCategorySchema = z.object({
-  code: z.string().trim().min(1, "カテゴリコードは必須です").max(10),
   categoryName: z.string().trim().min(1, "カテゴリ名は必須です").max(100),
   description: z.string().max(255).nullable().optional(),
 });
@@ -52,6 +52,8 @@ export const certificationSchema = z.object({
 
 export const siteSchema = z.object({
   siteName: z.string().trim().min(1, "現場名は必須です").max(100),
+  nearestStationId: z.number().int().positive().nullable().optional(),
+  address: z.string().trim().max(255).nullable().optional(),
 });
 
 /** 現場ポジション（役割）マスタ（MST003）。名称のみの単純マスタ（detailed-design.md 3章）。 */

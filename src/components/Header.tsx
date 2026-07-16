@@ -22,12 +22,22 @@ export function Header({
           </Link>
           {user && (
             <nav className="flex items-center gap-4 text-sm text-slate-600">
+              {(user.role === "GENERAL" || user.role === "MANAGER") && (
+                <Link href="/mypage" className="hover:text-brand-700 hover:underline">
+                  マイ経歴書
+                </Link>
+              )}
               <Link href="/resumes" className="hover:text-brand-700 hover:underline">
                 経歴書一覧
               </Link>
               <Link href="/dashboard" className="hover:text-brand-700 hover:underline">
                 ダッシュボード
               </Link>
+              {user.role === "ADMIN" && (
+                <Link href="/admin/departments" className="hover:text-brand-700 hover:underline">
+                  マスタ管理
+                </Link>
+              )}
             </nav>
           )}
         </div>

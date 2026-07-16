@@ -100,8 +100,10 @@ model Department {
 
 /// 現場マスタ（MST005、ADR 0007で新設）。プロジェクト経歴の現場参照先。
 model Site {
-  id       Int    @id @default(autoincrement())
-  siteName String
+  id               Int     @id @default(autoincrement())
+  siteName         String
+  nearestStationId Int?
+  address          String?
 
   createdAt DateTime  @default(now())
   createdBy String
@@ -110,7 +112,8 @@ model Site {
   deletedAt DateTime?
   deletedBy String?
 
-  projects Project[]
+  nearestStation Station? @relation(fields: [nearestStationId], references: [id])
+  projects       Project[]
 
   @@map("site")
 }
@@ -184,6 +187,7 @@ model Station {
 
   lineLinks StationLineLink[]
   employees Employee[]
+  sites     Site[]
 
   @@map("station")
 }

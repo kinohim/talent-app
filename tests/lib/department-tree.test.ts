@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { generateDepartmentCode } from "@/lib/department-tree";
+import { generateDepartmentCode, resolveDepartmentPath, type DepartmentRecord } from "@/lib/department-tree";
 
 /**
  * src/lib/department-tree.ts の組織コード自動採番ロジックのユニットテスト。
@@ -40,5 +40,56 @@ describe("generateDepartmentCode", () => {
   it("階層区分ごとにプレフィックスが異なり連番も独立する", async () => {
     departmentCodes = [{ code: "DIV01" }, { code: "DIV02" }, { code: "DEP01" }];
     await expect(generateDepartmentCode("DIVISION")).resolves.toBe("DIV03");
+  });
+});
+
+/**
+ * resolveDepartmentPath: REF002一覧の所属組織列を「事業部/部/Gr」のフル階層表示にするためのユーティリティ。
+ */
+describe("resolveDepartmentPath", () => {
+  const division: DepartmentRecord = {
+    id: 1,
+    code: "DIV01",
+    departmentName: "システム事業部",
+    orgLevel: "DIVISION",
+    parentId: null,
+    deletedAt: null,
+  };
+  const department: DepartmentRecord = {
+    id: 2,
+    code: "DEP01",
+    departmentName: "開発部",
+    orgLevel: "DEPARTMENT",
+    parentId: 1,
+    deletedAt: null,
+  };
+  const group: DepartmentRecord = {
+    id: 3,
+    code: "GRP01",
+    departmentName: "第一Gr",
+    orgLevel: "GROUP",
+    parentId: 2,
+    deletedAt: null,
+  };
+  const records = [division, department, group];
+
+  it("Grまで所属している場合は事業部/部/Grを/で結合する", () => {
+    expect(resolveDepartmentPath(records, group.id)).toBe("システム事業部/開発部/第一Gr");
+  });
+
+  it("部署までの所属なら2階層のみを結合する", () => {
+    expect(resolveDepartmentPath(records, department.id)).toBe("システム事業部/開発部");
+  });
+
+  it("未所属(null)はnullを返す", () => {
+    expect(resolveDepartmentPath(records, null)).toBeNull();
+  });
+
+  it("循環データがあっても無限ループせずに打ち切る", () => {
+    const cyclic: DepartmentRecord[] = [
+      { ...division, id: 10, parentId: 11 },
+      { ...department, id: 11, parentId: 10 },
+    ];
+    expect(() => resolveDepartmentPath(cyclic, 10)).not.toThrow();
   });
 });

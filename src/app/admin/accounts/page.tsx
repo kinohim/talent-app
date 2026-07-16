@@ -1,7 +1,16 @@
 import Link from "next/link";
 import { Role } from "@prisma/client";
 import { buildDepartmentTree, flattenDepartmentOptions, loadDepartments } from "@/lib/department-tree";
-import { searchAccounts, type AccountStatus, type AccountSearchParams } from "@/lib/account-search";
+import {
+  searchAccounts,
+  type AccountStatus,
+  type AccountSearchParams,
+  type AccountSortBy,
+} from "@/lib/account-search";
+import { MultiSelectDropdown } from "@/components/MultiSelectDropdown";
+import { SortableTh } from "@/components/SortableTh";
+
+const SORT_BY_VALUES: AccountSortBy[] = ["employeeId", "name", "department", "role", "status"];
 
 /**
  * REF007 アカウント一覧（/admin/accounts、ADMINのみ）。
@@ -55,6 +64,10 @@ export default async function AccountsAdminPage({ searchParams }: { searchParams
     departmentIds: toIdList(sp.departmentIds),
     roles: toArray(sp.roles).filter((r): r is Role => r in ROLE_LABEL) as Role[],
     statuses: toArray(sp.statuses).filter((s): s is AccountStatus => s === "ACTIVE" || s === "INACTIVE"),
+    sortBy: SORT_BY_VALUES.includes(first(sp.sortBy) as AccountSortBy)
+      ? (first(sp.sortBy) as AccountSortBy)
+      : "employeeId",
+    sortOrder: first(sp.sortOrder) === "desc" ? "desc" : "asc",
     page: Math.max(1, Number(first(sp.page) ?? "1") || 1),
     pageSize: PAGE_SIZE,
   };
@@ -63,15 +76,20 @@ export default async function AccountsAdminPage({ searchParams }: { searchParams
   const departmentOptions = flattenDepartmentOptions(buildDepartmentTree(departmentRecords));
   const totalPages = Math.max(1, Math.ceil(result.total / result.pageSize));
 
-  const buildPageQuery = (page: number) => {
+  const buildQuery = (overrides: { page?: number; sortBy?: string; sortOrder?: string }) => {
     const query = new URLSearchParams();
     if (params.name) query.set("name", params.name);
     for (const id of params.departmentIds) query.append("departmentIds", String(id));
     for (const r of params.roles) query.append("roles", r);
     for (const s of params.statuses) query.append("statuses", s);
-    query.set("page", String(page));
+    query.set("sortBy", overrides.sortBy ?? params.sortBy);
+    query.set("sortOrder", overrides.sortOrder ?? params.sortOrder);
+    query.set("page", String(overrides.page ?? params.page));
     return `/admin/accounts?${query.toString()}`;
   };
+  const buildPageQuery = (page: number) => buildQuery({ page });
+  const buildSortHref = (sortBy: string, sortOrder: "asc" | "desc") =>
+    buildQuery({ page: 1, sortBy, sortOrder });
 
   return (
     <div className="space-y-4">
@@ -90,13 +108,12 @@ export default async function AccountsAdminPage({ searchParams }: { searchParams
           </div>
           <div>
             <label className="form-label">所属組織（複数選択可）</label>
-            <select className="form-input" name="departmentIds" multiple size={4} defaultValue={params.departmentIds.map(String)}>
-              {departmentOptions.map((d) => (
-                <option key={d.id} value={d.id}>
-                  {d.label}
-                </option>
-              ))}
-            </select>
+            <MultiSelectDropdown
+              name="departmentIds"
+              options={departmentOptions.map((d) => ({ id: d.id, label: d.label }))}
+              defaultValues={params.departmentIds}
+              placeholder="所属組織を選択"
+            />
           </div>
           <div>
             <label className="form-label">権限（複数選択可）</label>
@@ -131,6 +148,8 @@ export default async function AccountsAdminPage({ searchParams }: { searchParams
             </div>
           </div>
         </div>
+        <input type="hidden" name="sortBy" value={params.sortBy} />
+        <input type="hidden" name="sortOrder" value={params.sortOrder} />
         <div className="flex gap-3">
           <button type="submit" className="btn-primary">
             検索
@@ -146,13 +165,13 @@ export default async function AccountsAdminPage({ searchParams }: { searchParams
       <table className="table-base">
         <thead>
           <tr>
-            <th>社員ID</th>
-            <th>氏名</th>
+            <SortableTh label="社員ID" columnKey="employeeId" activeSortBy={params.sortBy} activeSortOrder={params.sortOrder} buildHref={buildSortHref} />
+            <SortableTh label="氏名" columnKey="name" activeSortBy={params.sortBy} activeSortOrder={params.sortOrder} buildHref={buildSortHref} />
             <th>カナ</th>
             <th>メールアドレス</th>
-            <th>所属組織</th>
-            <th>権限</th>
-            <th>状態</th>
+            <SortableTh label="所属組織" columnKey="department" activeSortBy={params.sortBy} activeSortOrder={params.sortOrder} buildHref={buildSortHref} />
+            <SortableTh label="権限" columnKey="role" activeSortBy={params.sortBy} activeSortOrder={params.sortOrder} buildHref={buildSortHref} />
+            <SortableTh label="状態" columnKey="status" activeSortBy={params.sortBy} activeSortOrder={params.sortOrder} buildHref={buildSortHref} />
             <th></th>
           </tr>
         </thead>

@@ -6,6 +6,7 @@ import {
   collectDescendantIds,
   loadDepartments,
   resolveDepartmentLevelIdInMemory,
+  resolveDepartmentPath,
 } from "@/lib/department-tree";
 
 /**
@@ -17,6 +18,9 @@ import {
  * APIルートとREF002ページ（Server Component）の両方からこのモジュールを使い、ロジックを一元化する。
  */
 
+export type EmployeeSortBy = "employeeId" | "name" | "department" | "hireDate";
+export type SortOrder = "asc" | "desc";
+
 export type EmployeeSearchParams = {
   name?: string;
   departmentId?: number;
@@ -27,7 +31,9 @@ export type EmployeeSearchParams = {
   certificationIds: number[];
   certificationMatch: "and" | "or";
   siteIds: number[];
-  includeDeleted: boolean;
+  siteScope: "current" | "all";
+  sortBy: EmployeeSortBy;
+  sortOrder: SortOrder;
   page: number;
   pageSize: number;
 };
@@ -36,13 +42,14 @@ export type EmployeeSearchRow = {
   employeeId: string;
   name: string;
   nameKana: string;
-  department: { id: number; name: string } | null;
+  department: { id: number; name: string; path: string } | null;
   hireDate: Date | null;
+  allSkills: string[];
+  allCertifications: string[];
   matchedSkills: string[];
   matchedCertifications: string[];
   matchedSites: string[];
   canViewDetail: boolean;
-  deletedAt: Date | null;
 };
 
 export type EmployeeSearchResult = {
@@ -59,11 +66,7 @@ export async function searchEmployees(
   // 配下検索・部署レベル解決用に組織を一括ロード（削除済み含む: 削除済み組織所属の社員も検索から漏らさない）
   const departments = await loadDepartments(true);
 
-  const conditions: Prisma.EmployeeWhereInput[] = [];
-
-  if (!params.includeDeleted) {
-    conditions.push({ deletedAt: null });
-  }
+  const conditions: Prisma.EmployeeWhereInput[] = [{ deletedAt: null }];
 
   if (params.name) {
     conditions.push({
@@ -114,33 +117,47 @@ export async function searchEmployees(
   }
 
   if (params.siteIds.length > 0) {
-    // 「過去にどの現場に誰がいたか」検索: プロジェクト経歴に該当現場を含む社員
+    // 「現在のみ」= 現在進行中(end_date=NULL)のプロジェクトのみ。「過去を含む」= 過去にその現場にいた社員も含む
     conditions.push({
-      projects: { some: { siteId: { in: params.siteIds }, deletedAt: null } },
+      projects: {
+        some: {
+          siteId: { in: params.siteIds },
+          deletedAt: null,
+          ...(params.siteScope === "current" ? { endDate: null } : {}),
+        },
+      },
     });
   }
 
-  const where: Prisma.EmployeeWhereInput = conditions.length > 0 ? { AND: conditions } : {};
+  const where: Prisma.EmployeeWhereInput = { AND: conditions };
+
+  const orderBy: Prisma.EmployeeOrderByWithRelationInput =
+    params.sortBy === "department"
+      ? { department: { departmentName: params.sortOrder } }
+      : { [params.sortBy]: params.sortOrder };
 
   const [employees, total] = await Promise.all([
     prisma.employee.findMany({
       where,
       skip: (params.page - 1) * params.pageSize,
       take: params.pageSize,
-      orderBy: { employeeId: "asc" },
+      orderBy,
       include: {
         department: { select: { id: true, departmentName: true } },
-        // ヒットしたスキル/資格/現場の表示用。検索条件が無ければ in: [] で0件になる
         skillLinks: {
-          where: { deletedAt: null, skillId: { in: params.skillIds } },
-          include: { skill: { select: { skillName: true } } },
+          where: { deletedAt: null },
+          include: { skill: { select: { id: true, skillName: true } } },
         },
         certifications: {
-          where: { deletedAt: null, certificationId: { in: params.certificationIds } },
-          include: { certification: { select: { certificationName: true } } },
+          where: { deletedAt: null },
+          include: { certification: { select: { id: true, certificationName: true } } },
         },
         projects: {
-          where: { deletedAt: null, siteId: { in: params.siteIds } },
+          where: {
+            deletedAt: null,
+            siteId: { in: params.siteIds },
+            ...(params.siteScope === "current" ? { endDate: null } : {}),
+          },
           include: { site: { select: { siteName: true } } },
         },
       },
@@ -150,6 +167,8 @@ export async function searchEmployees(
 
   const departmentsById = new Map(departments.map((d) => [d.id, d]));
   const isGeneral = session.user.role === "GENERAL";
+  const skillIdSet = new Set(params.skillIds);
+  const certificationIdSet = new Set(params.certificationIds);
 
   const items: EmployeeSearchRow[] = employees.map((employee) => {
     const canViewDetail =
@@ -164,16 +183,31 @@ export async function searchEmployees(
       name: employee.name,
       nameKana: employee.nameKana,
       department: employee.department
-        ? { id: employee.department.id, name: employee.department.departmentName }
+        ? {
+            id: employee.department.id,
+            name: employee.department.departmentName,
+            path: resolveDepartmentPath(departmentsById, employee.departmentId) ?? employee.department.departmentName,
+          }
         : null,
       hireDate: employee.hireDate,
-      matchedSkills: [...new Set(employee.skillLinks.map((l) => l.skill.skillName))],
-      matchedCertifications: [
+      allSkills: [...new Set(employee.skillLinks.map((l) => l.skill.skillName))],
+      allCertifications: [
         ...new Set(employee.certifications.map((l) => l.certification.certificationName)),
+      ],
+      matchedSkills: [
+        ...new Set(
+          employee.skillLinks.filter((l) => skillIdSet.has(l.skill.id)).map((l) => l.skill.skillName)
+        ),
+      ],
+      matchedCertifications: [
+        ...new Set(
+          employee.certifications
+            .filter((l) => certificationIdSet.has(l.certification.id))
+            .map((l) => l.certification.certificationName)
+        ),
       ],
       matchedSites: [...new Set(employee.projects.map((p) => p.site.siteName))],
       canViewDetail,
-      deletedAt: employee.deletedAt,
     };
   });
 

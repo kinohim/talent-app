@@ -13,8 +13,8 @@ function fmtDate(value: string | Date | null) {
 
 /**
  * REF006 プロジェクト経歴一覧（/mypage/projects）。
- * 本人が担当したプロジェクト経歴の一覧を表示（件数上限なし、screens.md #7）。
- * 各行からEDT005（現場経歴編集、全件を1画面で編集するリピーターUI）へ遷移する。
+ * 本人が担当したプロジェクト経歴の一覧を表示（件数上限なし、新しい現場が上、screens.md #7）。
+ * 新規追加ボタンはEDT005（新規）、各行は選択したプロジェクトのみを編集するEDT005（該当行）へ遷移する。
  */
 export default async function MyProjectsPage() {
   const session = await getServerSession(authOptions);
@@ -37,14 +37,14 @@ export default async function MyProjectsPage() {
   }
 
   const serialized = serializeEmployeeDetail(employee);
-  const editHref = `/resumes/${employeeId}/edit/projects`;
+  const addHref = `/resumes/${employeeId}/edit/projects`;
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold">現場（プロジェクト）経歴一覧</h1>
-        <Link href={editHref} className="btn-primary">
-          編集する
+        <Link href={addHref} className="btn-primary">
+          新規追加
         </Link>
       </div>
 
@@ -53,7 +53,11 @@ export default async function MyProjectsPage() {
       ) : (
         <div className="space-y-4">
           {serialized.projects.map((p) => (
-            <Link key={p.id} href={editHref} className="card block space-y-2 transition hover:border-brand-500 hover:shadow-md">
+            <Link
+              key={p.id}
+              href={`${addHref}/${p.id}`}
+              className="card block space-y-2 transition hover:border-brand-500 hover:shadow-md"
+            >
               <div className="flex items-center justify-between">
                 <h2 className="font-semibold">{p.siteName}</h2>
                 <span className="text-sm text-slate-500">

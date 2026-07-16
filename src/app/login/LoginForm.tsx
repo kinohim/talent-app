@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
 
 /**
  * 開発用ログインフォーム（ADR 0009の暫定方式）。
@@ -10,7 +9,6 @@ import { useRouter } from "next/navigation";
  * Azure ADテナント準備後はMicrosoft Entra IDへのリダイレクトボタンに置き換える（AUTH001）。
  */
 export function LoginForm() {
-  const router = useRouter();
   const [identifier, setIdentifier] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -37,8 +35,10 @@ export function LoginForm() {
       return;
     }
 
-    router.push("/");
-    router.refresh();
+    // next-authがログインCookieを発行した直後はNextのRouter Cacheが未認証時のRSC
+    // レスポンスを保持しており、router.push/refreshだと初回クリックで遷移が反映されない
+    // ことがあるため、確実にサーバーへ再取得させるハードナビゲーションで遷移する。
+    window.location.href = "/";
   }
 
   return (

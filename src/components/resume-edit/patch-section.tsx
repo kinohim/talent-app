@@ -37,6 +37,17 @@ export function ErrorList({ errors }: { errors: string[] }) {
   );
 }
 
+/** 編集画面の右上にも保存ボタンを表示する（画面下部のFormActionsと同じフォームを送信する）。 */
+export function TopSaveButton({ submitting }: { submitting: boolean }) {
+  return (
+    <div className="flex justify-end">
+      <button type="submit" className="btn-primary" disabled={submitting}>
+        {submitting ? "保存中…" : "保存"}
+      </button>
+    </div>
+  );
+}
+
 export function FormActions({
   submitting,
   onCancel,
