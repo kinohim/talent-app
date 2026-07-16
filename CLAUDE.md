@@ -51,6 +51,25 @@
 - 編集直後の lint/型チェックは hook が自動実行する。エラーが返ってきたら
   その場で修正してから次の作業に進むこと
 
+### 既知の環境問題: Windows側からのUNCパスアクセス時のvitestクラッシュ
+
+作業ディレクトリが `\\wsl.localhost\Ubuntu\...` のようなUNCパス(WSL2のファイルを
+Windows側からネットワーク経由で見ている状態)だと、`vite-node` が
+`process.cwd()[0]` をドライブレターと決め打ちしており、UNCパス(先頭が `\`)では
+不正な正規表現でクラッシュして `vitest run` が実行できない
+(`node_modules/vite-node/dist/utils.mjs` 内の実装起因。tsc/ESLintは影響を受けない)。
+
+- **確実な回避策**: WSL(Ubuntu)のターミナルを直接開き、`cd ~/projects/talent-app` した上で
+  `npm run verify` を実行する(ネイティブなLinuxパスになりバグを回避できる)
+- Windows側のシェルからしか動けない場合、`node node_modules/typescript/bin/tsc --noEmit` /
+  `node node_modules/eslint/bin/eslint.js .` は `node` 実行ファイルを直接叩けば動作するが、
+  `vitest` はこの方法でも回避できない
+
+**環境差異により処理が長時間化しそう、または通常の方法(`npm run verify`等)が
+そのまま使えないと分かった場合は、回避策を試行錯誤して時間・トークンを消費する前に、
+まずその旨を人間に報告し、次の指示を待つこと。**(例: 環境をまたぐ検証・大規模な
+ワークアラウンド・重いsubagent呼び出しなどを勝手に何分もかけて実行しない)
+
 ## よく使うコマンド
 
 ```
