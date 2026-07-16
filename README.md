@@ -12,7 +12,7 @@
 
 - Next.js（TypeScript、App Router、`src/`ディレクトリ構成）／フロントとAPIを1リポジトリで管理
 - DB: PostgreSQL（Neon/Supabase想定）／ORM: Prisma／認証: Auth.js（Credentials Provider）
-- 詳細・選定理由は `docs/decisions/0001-tech-stack.md` を参照
+- 詳細・選定理由は `docs/decisions.md` を参照（過去のADRは `BK/20260716_old-docs/decisions/` に保管）
 
 ## セットアップ
 
@@ -36,7 +36,7 @@ npm run dev
 
 ## 実装スコープ
 
-`docs/requirements/requirements.md` 4章のフェーズ分けに対応。
+旧要件定義書（`BK/20260716_old-docs/requirements/requirements.md`）4章のフェーズ分けに対応。現在の仕様は `docs/` 直下の資料（`docs/README.md` 参照）を正とする。
 
 - **フェーズ1（フル実装）**: ログイン、プロフィール一覧/詳細/編集（本人・自部署配下の編集含む）、部署・スキル・資格マスタCRUD、資格保有者一覧・スキル保有者一覧
 - **フェーズ2（画面・APIの骨組みのみ）**: Excel取込、駅・路線／現場ポジションマスタ、パスワード変更・リセット、アカウント管理、現場（プロジェクト）経歴の詳細編集UI。対応するAPIルートは501 `NOT_IMPLEMENTED`を返すスタブ、画面は「フェーズ2で実装予定」の案内のみ表示する
@@ -46,10 +46,8 @@ npm run dev
 
 | フォルダ | 用途 |
 |---|---|
-| `.claude/` | CLAUDE.md、サブエージェント定義（`agents/impl-agent.md`など）など開発ハーネス |
-| `docs/requirements/` | 要件定義書 |
-| `docs/design/` | アーキテクチャ・データモデル・API仕様 |
-| `docs/decisions/` | 意思決定記録（ADR）、AIとの壁打ちログ |
+| `.claude/` | サブエージェント定義（`agents/verifier.md`・`agents/code-reviewer.md`）・hooks・skillsなど開発ハーネス |
+| `docs/` | 仕様書（スキーマ・画面・設計判断。`docs/README.md` 参照） |
 | `docs/hackathon/` | ハッカソン発表用ロードマップ・評価軸マッピング・AI活用ログ |
 | `prisma/` | Prisma schema・seedスクリプト |
 | `src/app/` | Next.js App Router（画面・APIルート） |
@@ -58,8 +56,8 @@ npm run dev
 | `tests/` | 自動テスト |
 | `infra/` | DB構築・デプロイ・監視設定 |
 | `slides/` | 発表用パワポ |
-| `BK/django-legacy/` | 旧Django版ドラフト（ADR `0001`によりNext.js採用のため不使用、参考保管） |
+| `BK/` | 旧世代資料の退避先（Django版ドラフト、旧設計書一式 `20260716_old-docs/`、旧エージェント定義 `20260716_old-agents/`） |
 
 ## 開発の進め方
 
-ハッカソンの評価軸（設計・実装・テスト・インフラ・ハーネス）に沿って進める。詳細は `docs/hackathon/roadmap.md` を参照。実装作業は `.claude/agents/impl-agent.md` の役割定義に沿って進める。
+ハッカソンの評価軸（設計・実装・テスト・インフラ・ハーネス）に沿って進める。詳細は `docs/hackathon/roadmap.md` を参照。開発ハーネスの全体像は `HARNESS.md` を参照。

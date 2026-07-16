@@ -27,6 +27,3 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-
-# Django legacy backup (see BK/django-legacy)
-BK/venv/
