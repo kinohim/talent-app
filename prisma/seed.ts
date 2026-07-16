@@ -1,4 +1,6 @@
 import { PrismaClient } from "@prisma/client";
+import { readFileSync } from "node:fs";
+import path from "node:path";
 
 const prisma = new PrismaClient();
 const SEED_ACTOR = "seed";
@@ -117,6 +119,31 @@ async function main() {
         createdBy: SEED_ACTOR,
         updatedBy: SEED_ACTOR,
       },
+    });
+  }
+
+  // 駅名検索（/api/stations/search）の候補母集団として、駅マスタを一括投入する。
+  // データはscripts/fetch-stations.mjs（HeartRails Express API）で事前収集したJSON。
+  // stationNameにDBユニーク制約はないため、既存駅名を調べてから未登録分のみ追加する
+  // （再実行しても重複が増えないようにするため）。
+  const stationSeedPath = path.join(process.cwd(), "prisma", "station-seed-data.json");
+  const stationSeedNames: string[] = JSON.parse(readFileSync(stationSeedPath, "utf-8"));
+  const existingStationNames = new Set(
+    (
+      await prisma.station.findMany({
+        where: { stationName: { in: stationSeedNames } },
+        select: { stationName: true },
+      })
+    ).map((s) => s.stationName)
+  );
+  const newStationNames = stationSeedNames.filter((name) => !existingStationNames.has(name));
+  if (newStationNames.length > 0) {
+    await prisma.station.createMany({
+      data: newStationNames.map((name) => ({
+        stationName: name,
+        createdBy: SEED_ACTOR,
+        updatedBy: SEED_ACTOR,
+      })),
     });
   }
 
@@ -419,6 +446,7 @@ async function main() {
     departments: 9,
     sites: sites.length,
     employees: employeesData.length,
+    stationsAdded: newStationNames.length,
   });
 }
 

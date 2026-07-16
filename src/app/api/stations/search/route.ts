@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 import { getApiSession } from "@/lib/api-auth";
 import { apiUnauthenticated } from "@/lib/api-response";
 
-type HeartRailsStation = { name: string };
-
 /**
- * GET /api/stations/search?q=... — 外部の無料駅検索API（HeartRails Express、認証不要）を
- * サーバー経由でプロキシする。EDT001の最寄り駅入力で、リアルタイム検索の候補として使う。
- * クライアントから直接叩かない（CORS回避・外部依存先の秘匿）。
+ * GET /api/stations/search?q=... — 駅マスタ（station テーブル）への駅名部分一致検索。
+ * EDT001の最寄り駅入力で、リアルタイム検索の候補として使う。
+ * 以前は外部の無料駅検索API（HeartRails Express）へ都度問い合わせていたが、
+ * 同APIは駅名の完全一致検索のみでインクリメンタル検索に使えないため、
+ * 事前に収集・投入済みの自駅マスタへの検索に変更した
+ * （データ収集: scripts/fetch-stations.mjs、投入: prisma/seed.ts）。
  */
 export async function GET(req: NextRequest) {
   const session = await getApiSession();
@@ -16,18 +18,12 @@ export async function GET(req: NextRequest) {
   const q = req.nextUrl.searchParams.get("q")?.trim() ?? "";
   if (!q) return NextResponse.json({ items: [] });
 
-  try {
-    const url = `https://express.heartrails.com/api/json?method=getStations&name=${encodeURIComponent(q)}`;
-    const res = await fetch(url);
-    if (!res.ok) return NextResponse.json({ items: [] });
+  const stations = await prisma.station.findMany({
+    where: { stationName: { contains: q, mode: "insensitive" }, deletedAt: null },
+    select: { stationName: true },
+    orderBy: { stationName: "asc" },
+    take: 20,
+  });
 
-    const data = await res.json();
-    const raw = data?.response?.station;
-    const list: HeartRailsStation[] = Array.isArray(raw) ? raw : raw ? [raw] : [];
-
-    const names = Array.from(new Set(list.map((s) => s.name).filter(Boolean))).slice(0, 20);
-    return NextResponse.json({ items: names });
-  } catch {
-    return NextResponse.json({ items: [] });
-  }
+  return NextResponse.json({ items: stations.map((s) => s.stationName) });
 }
