@@ -12,6 +12,15 @@ description: verify を通してから規約に沿ったコミットを作成す
 
 1. `npm run verify` を実行する。**失敗した場合はコミットせず**、
    失敗内容を報告して修正から始める
+   - **既知の環境問題**: 作業ディレクトリが `\\wsl.localhost\Ubuntu\...` のような
+     UNCパス(Windows側からWSLをネットワーク越しに見ている状態)の場合、
+     `vite-node` のドライブレター決め打ちバグにより `vitest run` がクラッシュし
+     `npm run verify` がそのままでは失敗する(CLAUDE.md「検証」節を参照)。
+     この場合、無理にワークアラウンド(重いsubagent呼び出し等)を試さず、
+     **その旨を報告して次の指示を待つ**。prisma generate/ESLint/tsc部分だけは
+     `node node_modules/eslint/bin/eslint.js .` / `node node_modules/typescript/bin/tsc --noEmit`
+     のように `node` 実行ファイルを直接叩けば結果を確認できるので、そこまでは
+     実施した上で状況を伝えるとよい
 2. `git status` と `git diff` で変更内容を確認し、コミットに含めるべきでない
    ファイル(一時ファイル、デバッグコード、.env 系)が混ざっていないか確認する
 3. 変更内容を要約したコミットメッセージを作成する:
@@ -19,6 +28,6 @@ description: verify を通してから規約に沿ったコミットを作成す
    - 種類は feat / fix / refactor / test / docs / chore を使う
    - 本文(必要な場合): 何を・なぜ変えたか。どうやってかはコードに任せる
 4. 論理的に独立した変更が混ざっている場合は、分割コミットを提案する
-5. コミットを実行し、結果を報告する
+5. コミットを実行し、結果を報告する。プッシュコマンドを提示する。
 
 注意: push は行わない(settings.json でも deny 済み。push は人間が行う)。
