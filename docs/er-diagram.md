@@ -103,6 +103,8 @@ erDiagram
     site {
         int id PK
         string site_name "UK"
+        string nearest_station_line
+        string nearest_station_name
     }
     project {
         int id PK

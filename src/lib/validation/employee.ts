@@ -35,7 +35,8 @@ export const basicSectionSchema = z.object({
   gender: z.enum(["MALE", "FEMALE", "OTHER"]).nullable().optional(),
   // departmentIdはADMINのみ変更可。他ロールが送ってもAPI側で無視する（api-design.md 2.2）。
   departmentId: z.number().int().positive().nullable().optional(),
-  nearestStationId: z.number().int().positive().nullable().optional(),
+  nearestStationLine: z.string().trim().max(100).nullable().optional(),
+  nearestStationName: z.string().trim().max(100).nullable().optional(),
   hireDate: z
     .string()
     .date()

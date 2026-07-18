@@ -100,10 +100,11 @@ model Department {
 
 /// 現場マスタ（MST005、ADR 0007で新設）。プロジェクト経歴の現場参照先。
 model Site {
-  id               Int     @id @default(autoincrement())
-  siteName         String
-  nearestStationId Int?
-  address          String?
+  id                 Int     @id @default(autoincrement())
+  siteName           String
+  nearestStationName String? @db.VarChar(100)
+  nearestStationLine String? @db.VarChar(100)
+  address            String?
 
   createdAt DateTime  @default(now())
   createdBy String
@@ -112,8 +113,7 @@ model Site {
   deletedAt DateTime?
   deletedBy String?
 
-  nearestStation Station? @relation(fields: [nearestStationId], references: [id])
-  projects       Project[]
+  projects Project[]
 
   @@map("site")
 }
@@ -126,7 +126,8 @@ model Employee {
   birthDate            DateTime?         @db.Date
   gender               Gender?
   departmentId         Int?
-  nearestStationId     Int?
+  nearestStationName   String?           @db.VarChar(100)
+  nearestStationLine   String?           @db.VarChar(100)
   hireDate             DateTime?         @db.Date
   careerSummary        String?
   selfPr               String?
@@ -145,7 +146,6 @@ model Employee {
 
   user            User?
   department      Department?               @relation(fields: [departmentId], references: [id])
-  nearestStation  Station?                  @relation(fields: [nearestStationId], references: [id])
   skillLinks      EmployeeSkillLink[]
   certifications  EmployeeCertificationLink[]
   projects        Project[]
@@ -154,62 +154,6 @@ model Employee {
   @@index([nameKana])
   @@index([departmentId])
   @@map("employee")
-}
-
-/// 路線マスタ（フェーズ2）
-model RailwayLine {
-  id       Int    @id @default(autoincrement())
-  lineName String
-
-  createdAt DateTime  @default(now())
-  createdBy String
-  updatedAt DateTime  @updatedAt
-  updatedBy String
-  deletedAt DateTime?
-  deletedBy String?
-
-  stationLinks StationLineLink[]
-
-  @@map("railway_line")
-}
-
-/// 駅マスタ（フェーズ2）
-model Station {
-  id          Int    @id @default(autoincrement())
-  stationName String
-
-  createdAt DateTime  @default(now())
-  createdBy String
-  updatedAt DateTime  @updatedAt
-  updatedBy String
-  deletedAt DateTime?
-  deletedBy String?
-
-  lineLinks StationLineLink[]
-  employees Employee[]
-  sites     Site[]
-
-  @@map("station")
-}
-
-/// 駅-路線 中間テーブル（フェーズ2）
-model StationLineLink {
-  id        Int @id @default(autoincrement())
-  lineId    Int
-  stationId Int
-
-  createdAt DateTime  @default(now())
-  createdBy String
-  updatedAt DateTime  @updatedAt
-  updatedBy String
-  deletedAt DateTime?
-  deletedBy String?
-
-  line    RailwayLine @relation(fields: [lineId], references: [id])
-  station Station     @relation(fields: [stationId], references: [id])
-
-  @@unique([lineId, stationId])
-  @@map("station_line_link")
 }
 
 /// スキルカテゴリマスタ

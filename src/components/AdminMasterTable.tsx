@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { StationSearchInput } from "@/components/resume-edit/StationSearchInput";
+import { NearestStationSelect } from "@/components/resume-edit/NearestStationSelect";
 
 /**
  * マスタ管理画面（S-14/S-15/S-18等）共通コンポーネント。
@@ -25,9 +25,9 @@ export type FieldDef =
       options: { value: string; label: string }[];
     }
   | { name: string; label: string; type: "checkbox" }
-  // 駅マスタのfind-or-create検索入力(MST005: 最寄り駅)。displayKeyはAdminRecord内の
-  // 表示用駅名プロパティ(数値idであるname本体とは別に、編集開始時の初期表示名として使う)
-  | { name: string; label: string; type: "station-search"; displayKey: string };
+  // 最寄り駅入力(都道府県→路線→駅の3段階プルダウン、MST005)。路線名・駅名の2値を
+  // それぞれ別のAdminRecordプロパティ(lineFieldName/nameFieldName)に保存する
+  | { name: string; label: string; type: "nearest-station"; lineFieldName: string; nameFieldName: string };
 
 export type ColumnDef = {
   key: string;
@@ -56,6 +56,11 @@ function getFormValues(fields: FieldDef[], item: AdminRecord | null): Record<str
   for (const field of fields) {
     if (field.type === "checkbox") {
       values[field.name] = item?.[field.name] === true ? "true" : "false";
+    } else if (field.type === "nearest-station") {
+      const line = item?.[field.lineFieldName];
+      const name = item?.[field.nameFieldName];
+      values[field.lineFieldName] = typeof line === "string" ? line : "";
+      values[field.nameFieldName] = typeof name === "string" ? name : "";
     } else {
       const value = item?.[field.name];
       values[field.name] = value === null || value === undefined ? "" : String(value);
@@ -75,8 +80,9 @@ function buildPayload(fields: FieldDef[], values: Record<string, string>): Recor
       payload[field.name] = values[field.name] ? Number(values[field.name]) : null;
       continue;
     }
-    if (field.type === "station-search") {
-      payload[field.name] = values[field.name] ? Number(values[field.name]) : null;
+    if (field.type === "nearest-station") {
+      payload[field.lineFieldName] = values[field.lineFieldName]?.trim() || null;
+      payload[field.nameFieldName] = values[field.nameFieldName]?.trim() || null;
       continue;
     }
     const trimmed = (values[field.name] ?? "").trim();
@@ -211,14 +217,25 @@ export function AdminMasterTable({ resourceLabel, apiBase, columns, fields, init
                   }
                 />
               )}
-              {field.type === "station-search" && (
-                <StationSearchInput
-                  initialName={
-                    typeof editingItem?.[field.displayKey] === "string"
-                      ? (editingItem[field.displayKey] as string)
+              {field.type === "nearest-station" && (
+                <NearestStationSelect
+                  initialLine={
+                    typeof editingItem?.[field.lineFieldName] === "string"
+                      ? (editingItem[field.lineFieldName] as string)
                       : null
                   }
-                  onSelect={(id) => setValues((v) => ({ ...v, [field.name]: id ? String(id) : "" }))}
+                  initialName={
+                    typeof editingItem?.[field.nameFieldName] === "string"
+                      ? (editingItem[field.nameFieldName] as string)
+                      : null
+                  }
+                  onChange={({ line, name }) =>
+                    setValues((v) => ({
+                      ...v,
+                      [field.lineFieldName]: line ?? "",
+                      [field.nameFieldName]: name ?? "",
+                    }))
+                  }
                 />
               )}
             </div>

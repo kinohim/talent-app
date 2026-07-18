@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ErrorList, FormActions, TopSaveButton, patchEmployeeSection } from "./patch-section";
-import { StationSearchInput } from "./StationSearchInput";
+import { NearestStationSelect } from "./NearestStationSelect";
 import { expectedUniversityGraduationYear } from "@/lib/graduation-year";
 
 /**
@@ -35,7 +35,7 @@ type InitialData = {
   gender: string | null;
   departmentId: number | null;
   departmentName: string | null;
-  nearestStationId: number | null;
+  nearestStationLine: string | null;
   nearestStationName: string | null;
   hireDate: DateLike;
   finalSchoolName: string | null;
@@ -99,9 +99,8 @@ export function BasicInfoForm({
   const [departmentId, setDepartmentId] = useState(
     initialData.departmentId ? String(initialData.departmentId) : ""
   );
-  const [nearestStationId, setNearestStationId] = useState(
-    initialData.nearestStationId ? String(initialData.nearestStationId) : ""
-  );
+  const [nearestStationLine, setNearestStationLine] = useState(initialData.nearestStationLine ?? "");
+  const [nearestStationName, setNearestStationName] = useState(initialData.nearestStationName ?? "");
   const [hireDate, setHireDate] = useState(toDateInputValue(initialData.hireDate));
   const [finalSchoolName, setFinalSchoolName] = useState(initialData.finalSchoolName ?? "");
   const [finalDepartmentName, setFinalDepartmentName] = useState(
@@ -168,7 +167,8 @@ export function BasicInfoForm({
       gender: gender || null,
       // 所属組織はADMINのみ送信(他ロールが送ってもサーバー側で無視される)
       ...(canEditDepartment ? { departmentId: departmentId ? Number(departmentId) : null } : {}),
-      nearestStationId: nearestStationId ? Number(nearestStationId) : null,
+      nearestStationLine: nearestStationLine.trim() || null,
+      nearestStationName: nearestStationName.trim() || null,
       hireDate: hireDate || null,
       finalSchoolName: finalSchoolName.trim() || null,
       finalDepartmentName: finalDepartmentName.trim() || null,
@@ -278,9 +278,13 @@ export function BasicInfoForm({
           </div>
           <div>
             <label className="form-label">最寄り駅</label>
-            <StationSearchInput
+            <NearestStationSelect
+              initialLine={initialData.nearestStationLine}
               initialName={initialData.nearestStationName}
-              onSelect={(id) => setNearestStationId(id ? String(id) : "")}
+              onChange={({ line, name }) => {
+                setNearestStationLine(line ?? "");
+                setNearestStationName(name ?? "");
+              }}
             />
           </div>
           <div>

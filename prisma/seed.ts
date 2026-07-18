@@ -1,6 +1,4 @@
 import { PrismaClient } from "@prisma/client";
-import { readFileSync } from "node:fs";
-import path from "node:path";
 
 const prisma = new PrismaClient();
 const SEED_ACTOR = "seed";
@@ -91,61 +89,6 @@ async function main() {
       })
     )
   );
-
-  // --- 駅・路線マスタ（管理画面は廃止、データはスクリプト投入: ADR 0007） ---
-  const railwayLine = await prisma.railwayLine.upsert({
-    where: { id: 1 },
-    update: {},
-    create: { id: 1, lineName: "JR山手線", createdBy: SEED_ACTOR, updatedBy: SEED_ACTOR },
-  });
-
-  const stations = await Promise.all(
-    ["東京", "新宿", "渋谷"].map((name, i) =>
-      prisma.station.upsert({
-        where: { id: i + 1 },
-        update: {},
-        create: { id: i + 1, stationName: name, createdBy: SEED_ACTOR, updatedBy: SEED_ACTOR },
-      })
-    )
-  );
-
-  for (const station of stations) {
-    await prisma.stationLineLink.upsert({
-      where: { lineId_stationId: { lineId: railwayLine.id, stationId: station.id } },
-      update: {},
-      create: {
-        lineId: railwayLine.id,
-        stationId: station.id,
-        createdBy: SEED_ACTOR,
-        updatedBy: SEED_ACTOR,
-      },
-    });
-  }
-
-  // 駅名検索（/api/stations/search）の候補母集団として、駅マスタを一括投入する。
-  // データはscripts/fetch-stations.mjs（HeartRails Express API）で事前収集したJSON。
-  // stationNameにDBユニーク制約はないため、既存駅名を調べてから未登録分のみ追加する
-  // （再実行しても重複が増えないようにするため）。
-  const stationSeedPath = path.join(process.cwd(), "prisma", "station-seed-data.json");
-  const stationSeedNames: string[] = JSON.parse(readFileSync(stationSeedPath, "utf-8"));
-  const existingStationNames = new Set(
-    (
-      await prisma.station.findMany({
-        where: { stationName: { in: stationSeedNames } },
-        select: { stationName: true },
-      })
-    ).map((s) => s.stationName)
-  );
-  const newStationNames = stationSeedNames.filter((name) => !existingStationNames.has(name));
-  if (newStationNames.length > 0) {
-    await prisma.station.createMany({
-      data: newStationNames.map((name) => ({
-        stationName: name,
-        createdBy: SEED_ACTOR,
-        updatedBy: SEED_ACTOR,
-      })),
-    });
-  }
 
   // --- スキルマスタ ---
   const skillCategory = await prisma.skillCategory.upsert({
@@ -344,7 +287,8 @@ async function main() {
         name: e.name,
         nameKana: e.nameKana,
         departmentId: e.departmentId,
-        nearestStationId: stations[0].id,
+        nearestStationLine: "JR山手線",
+        nearestStationName: "東京",
         hireDate: new Date("2020-04-01"),
         careerSummary: "システム開発プロジェクトに従事。",
         selfPr: "継続的な学習を心がけています。",
@@ -446,7 +390,6 @@ async function main() {
     departments: 9,
     sites: sites.length,
     employees: employeesData.length,
-    stationsAdded: newStationNames.length,
   });
 }
 

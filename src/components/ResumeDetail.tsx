@@ -41,7 +41,7 @@ type Employee = {
   gender: string | null;
   departmentName: string | null;
   nearestStationName: string | null;
-  nearestStationLines: string[];
+  nearestStationLine: string | null;
   hireDate: string | Date | null;
   careerSummary: string | null;
   selfPr: string | null;
@@ -103,7 +103,7 @@ export function ResumeDetail({
   const nearestStationValue = anonymize
     ? "未公開"
     : employee.nearestStationName
-      ? `${[...employee.nearestStationLines].join("・")} ${employee.nearestStationName}`.trim()
+      ? `${employee.nearestStationLine ?? ""} ${employee.nearestStationName}`.trim()
       : "未設定";
 
   return (

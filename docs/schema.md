@@ -149,7 +149,8 @@ deleted_at, deleted_by, deleted_program   -- 論理削除。NULL=有効、日付
 |---|---|---|---|
 | id | SERIAL | PK | |
 | site_name | VARCHAR(100) | UK, NOT NULL | MST005で管理。システム全体でユニーク |
-| nearest_station_id | INT | FK→station.id, NULL可 | MST005で管理（2026-07追加）。employeeの最寄駅と同じstationマスタを参照 |
+| nearest_station_line | VARCHAR(100) | NULL可 | MST005で管理（2026-07追加、2026-07に駅マスタ廃止に伴い自由記述に変更）。例：JR山手線 |
+| nearest_station_name | VARCHAR(100) | NULL可 | MST005で管理（2026-07追加、2026-07に駅マスタ廃止に伴い自由記述に変更）。例：東京駅 |
 | address | VARCHAR(255) | NULL可 | MST005で管理（2026-07追加）。自由記述 |
 
 ## project（プロジェクト経歴）

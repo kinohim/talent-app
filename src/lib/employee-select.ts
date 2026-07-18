@@ -6,11 +6,6 @@ import { Prisma } from "@prisma/client";
  */
 export const employeeDetailInclude = {
   department: true,
-  nearestStation: {
-    include: {
-      lineLinks: { where: { deletedAt: null }, include: { line: true } },
-    },
-  },
   skillLinks: {
     where: { deletedAt: null },
     include: { skill: true, skillVersion: true },
@@ -44,10 +39,8 @@ export function serializeEmployeeDetail(employee: EmployeeDetail) {
     gender: employee.gender,
     departmentId: employee.departmentId,
     departmentName: employee.department?.departmentName ?? null,
-    nearestStationId: employee.nearestStationId,
-    nearestStationName: employee.nearestStation?.stationName ?? null,
-    // 1駅に複数路線が乗り入れるケースがあるため配列で返す（REF003: 路線名+駅名表示）
-    nearestStationLines: employee.nearestStation?.lineLinks.map((l) => l.line.lineName) ?? [],
+    nearestStationName: employee.nearestStationName,
+    nearestStationLine: employee.nearestStationLine,
     hireDate: employee.hireDate,
     careerSummary: employee.careerSummary,
     selfPr: employee.selfPr,

@@ -52,7 +52,8 @@ export const certificationSchema = z.object({
 
 export const siteSchema = z.object({
   siteName: z.string().trim().min(1, "現場名は必須です").max(100),
-  nearestStationId: z.number().int().positive().nullable().optional(),
+  nearestStationLine: z.string().trim().max(100).nullable().optional(),
+  nearestStationName: z.string().trim().max(100).nullable().optional(),
   address: z.string().trim().max(255).nullable().optional(),
 });
 
