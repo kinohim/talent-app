@@ -19,6 +19,14 @@ const GENERAL_MENU: MenuItem[] = [
   },
 ];
 
+const SITE_SEARCH_MENU: MenuItem[] = [
+  {
+    href: "/site-search",
+    label: "現場/参画者一覧",
+    description: "現場の最寄駅周辺・同じ路線に住む社員を地図で確認する",
+  },
+];
+
 const ADMIN_MENU: MenuItem[] = [
   { href: "/admin/departments", label: "部署管理", description: "組織マスタ（事業部＞部署＞Gr）のCRUD" },
   { href: "/admin/skills", label: "スキル管理", description: "スキルカテゴリ・スキルマスタのCRUD" },
@@ -44,6 +52,7 @@ export default async function TopPage() {
   }
 
   const isAdmin = session.user.role === "ADMIN";
+  const canSearchSites = isAdmin || session.user.role === "MANAGER";
 
   return (
     <div className="space-y-8">
@@ -60,6 +69,17 @@ export default async function TopPage() {
           ))}
         </div>
       </section>
+
+      {canSearchSites && (
+        <section className="space-y-3">
+          <h2 className="text-sm font-semibold text-slate-500">現場検索メニュー（管理職以上）</h2>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {SITE_SEARCH_MENU.map((item) => (
+              <MenuCard key={item.href} item={item} />
+            ))}
+          </div>
+        </section>
+      )}
 
       {isAdmin && (
         <section className="space-y-3">

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { HeartRailsApiError, fetchLines, fetchStations } from "@/lib/heartrails";
+import { HeartRailsApiError, fetchLines, fetchStations, fetchStationGeo } from "@/lib/heartrails";
 
 /**
  * src/lib/heartrails.ts のユニットテスト。
@@ -68,5 +68,55 @@ describe("fetchStations", () => {
       vi.fn().mockRejectedValue(new Error("network down"))
     );
     await expect(fetchStations("JR山手線")).rejects.toThrow(HeartRailsApiError);
+  });
+});
+
+describe("fetchStationGeo", () => {
+  it("単一候補の緯度経度(y/x)を返す", async () => {
+    mockFetchOnce({
+      response: { station: { name: "渋谷", x: "139.701", y: "35.658", line: "JR山手線" } },
+    });
+    const geo = await fetchStationGeo("渋谷");
+    expect(geo).toEqual({ lat: 35.658, lng: 139.701, line: "JR山手線" });
+  });
+
+  it("同名駅が複数路線にある場合、lineHintと一致する候補を優先する", async () => {
+    mockFetchOnce({
+      response: {
+        station: [
+          { name: "渋谷", x: "139.701", y: "35.658", line: "東急東横線" },
+          { name: "渋谷", x: "139.702", y: "35.659", line: "JR山手線" },
+        ],
+      },
+    });
+    const geo = await fetchStationGeo("渋谷", "JR山手線");
+    expect(geo).toEqual({ lat: 35.659, lng: 139.702, line: "JR山手線" });
+  });
+
+  it("lineHintと一致する候補がなければ先頭候補にフォールバックする", async () => {
+    mockFetchOnce({
+      response: {
+        station: [{ name: "渋谷", x: "139.701", y: "35.658", line: "東急東横線" }],
+      },
+    });
+    const geo = await fetchStationGeo("渋谷", "存在しない路線");
+    expect(geo).toEqual({ lat: 35.658, lng: 139.701, line: "東急東横線" });
+  });
+
+  it("座標を持つ候補がない場合はnullを返す", async () => {
+    mockFetchOnce({ response: { station: { name: "渋谷" } } });
+    const geo = await fetchStationGeo("渋谷");
+    expect(geo).toBeNull();
+  });
+
+  it("response.errorが返る場合はnullを返す", async () => {
+    mockFetchOnce({ response: { error: "unknown station" } });
+    const geo = await fetchStationGeo("存在しない駅");
+    expect(geo).toBeNull();
+  });
+
+  it("HTTPエラー時はHeartRailsApiErrorをthrowする", async () => {
+    mockFetchOnce({}, { ok: false, status: 500 });
+    await expect(fetchStationGeo("渋谷")).rejects.toThrow(HeartRailsApiError);
   });
 });

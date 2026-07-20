@@ -87,6 +87,11 @@ export function requireAdmin(session: Session | null): session is Session {
   return session?.user.role === "ADMIN";
 }
 
+/** REF009（現場/参画者一覧）向け: ADMIN・MANAGERのみ閲覧可（GENERAL/HR_SALESは対象外）。 */
+export function requireManagerOrAdmin(session: Session | null): session is Session {
+  return session?.user.role === "ADMIN" || session?.user.role === "MANAGER";
+}
+
 export function requireLoggedIn(session: Session | null): session is Session {
   return session !== null;
 }

@@ -1,7 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Session } from "next-auth";
 import type { Role } from "@prisma/client";
-import { canEditEmployee, canViewEmployee, resolveDepartmentLevelId } from "@/lib/authz";
+import {
+  canEditEmployee,
+  canViewEmployee,
+  requireManagerOrAdmin,
+  resolveDepartmentLevelId,
+} from "@/lib/authz";
 
 /**
  * src/lib/authz.ts のユニットテスト。
@@ -154,5 +159,19 @@ describe("canEditEmployee", () => {
   it("GENERALは他人の経歴書を編集不可", async () => {
     const session = makeSession("GENERAL", 10);
     await expect(canEditEmployee(session, target)).resolves.toBe(false);
+  });
+});
+
+describe("requireManagerOrAdmin", () => {
+  it.each<Role>(["ADMIN", "MANAGER"])("%sは真", (role) => {
+    expect(requireManagerOrAdmin(makeSession(role, 10))).toBe(true);
+  });
+
+  it.each<Role>(["GENERAL", "HR_SALES"])("%sは偽", (role) => {
+    expect(requireManagerOrAdmin(makeSession(role, 10))).toBe(false);
+  });
+
+  it("未ログイン(null)は偽", () => {
+    expect(requireManagerOrAdmin(null)).toBe(false);
   });
 });
