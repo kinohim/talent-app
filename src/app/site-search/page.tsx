@@ -6,6 +6,7 @@ import { Forbidden } from "@/components/Forbidden";
 import { prisma } from "@/lib/prisma";
 import { searchSiteNearbyEmployees } from "@/lib/site-nearby-search";
 import { SiteNearbyMap } from "@/components/site-search/SiteNearbyMap";
+import { SiteSelectField } from "@/components/site-search/SiteSelectField";
 
 /**
  * REF009 現場/参画者一覧（/site-search、ADMIN/MANAGERのみ）。
@@ -34,7 +35,7 @@ export default async function SiteSearchPage({ searchParams }: { searchParams: S
   const sites = await prisma.site.findMany({
     where: { deletedAt: null },
     orderBy: { siteName: "asc" },
-    select: { id: true, siteName: true },
+    select: { id: true, siteName: true, nearestStationLine: true, nearestStationName: true },
   });
 
   const siteIdRaw = first(sp.siteId);
@@ -62,16 +63,7 @@ export default async function SiteSearchPage({ searchParams }: { searchParams: S
         <p className="card text-sm text-slate-400">現場マスタが未登録です（現場管理から登録してください）。</p>
       ) : (
         <form method="get" action="/site-search" className="card flex flex-wrap items-end gap-4">
-          <div>
-            <label className="form-label">現場</label>
-            <select name="siteId" defaultValue={siteId} className="form-input">
-              {sites.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.siteName}
-                </option>
-              ))}
-            </select>
-          </div>
+          <SiteSelectField sites={sites} defaultSiteId={siteId} />
           <div>
             <label className="form-label">近隣とみなす範囲</label>
             <select name="radiusKm" defaultValue={radiusKm} className="form-input">

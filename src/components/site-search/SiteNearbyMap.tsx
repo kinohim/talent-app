@@ -130,12 +130,29 @@ export function SiteNearbyMap({ site, employees, radiusKm }: Props) {
         ) : (
           <div ref={mapDivRef} className="h-[500px] w-full rounded border border-slate-200 bg-slate-50" />
         )}
+        <div className="mt-3 flex flex-wrap gap-4 text-xs text-slate-600">
+          <span className="flex items-center gap-1.5">
+            <span className="inline-block h-3 w-3 rounded-full bg-red-500" />
+            現場最寄り駅
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="inline-block h-3 w-3 rounded-full bg-blue-500" />
+            周辺に住む社員の最寄り駅
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="inline-block h-3 w-3 rounded-full bg-green-500" />
+            同一路線に住む社員の最寄り駅
+          </span>
+        </div>
       </div>
 
       <div className="card max-h-[600px] space-y-3 overflow-auto">
         <h2 className="font-semibold">
           検索結果（{employees.length}件・{radiusKm}km圏内 または 同一路線）
         </h2>
+        <p className="text-xs text-slate-400">
+          「近隣とみなす範囲」は同一路線の社員には影響しません（同一路線なら乗換なしのため、距離に関わらず常に表示されます）。
+        </p>
         {employees.length === 0 && <p className="text-sm text-slate-400">該当する社員がいません</p>}
         {employees.map((emp) => (
           <div key={emp.employeeId} className="rounded border border-slate-200 p-3">
